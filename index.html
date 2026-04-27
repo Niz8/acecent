@@ -10,10 +10,11 @@
   <div id="debug" style="color:white;padding:1rem;font-size:12px;position:fixed;top:0;left:0;z-index:9999">Loading...</div>
   <div id="app"></div>
   <script type="module">
-    document.getElementById('debug').textContent = 'Script started';
     import { GameState, PHASES } from './js/game.js';
     import { renderNameEntry, renderHand, renderLaunchSequence, playRocketAnimation } from './js/ui.js';
     import { showReadme, shouldShow, isVersionBump } from './js/readme.js';
+
+    document.getElementById('debug').textContent = 'Script started';
 
     const app = document.getElementById('app');
     const gs = new GameState();
