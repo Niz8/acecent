@@ -139,13 +139,13 @@ function renderNameEntry(container, gameState, onStart) {
           maxlength="20"
           autocomplete="off"
         />
+        <p class="name-disclaimer">👤 Your name will be saved locally and displayed publicly on the daily leaderboard.</p>
         <button id="launch-btn" class="btn-primary">
           🚀 BEGIN MISSION
         </button>
       </div>
       <div class="name-entry-footer">
-        <button class="info-btn" id="info-btn">ℹ️ How to Play / Card List</button>
-        <div class="scoreboard-notice">📡 Scoreboard — Coming Soon</div>
+        <div class="scoreboard-notice">📡 Daily Leaderboard — Live</div>
         <div class="version-footer">v${VERSION} · vibe coded · use at your own risk</div>
       </div>
     </div>
@@ -168,9 +168,6 @@ function renderNameEntry(container, gameState, onStart) {
 
   btn.addEventListener('click', tryStart);
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryStart(); });
-
-  const infoBtn = container.querySelector('#info-btn');
-  if (infoBtn) infoBtn.addEventListener('click', () => showReadme(false));
 }
 
 function renderHand(container, gameState, onRedraw, onLaunch) {
@@ -305,7 +302,7 @@ function playRocketAnimation(container, onComplete) {
 
 // --- Results ---
 
-function renderLaunchSequence(container, result, gameState) {
+function renderLaunchSequence(container, result, gameState, onLeaderboard) {
   container.innerHTML = `
     <div class="screen result-screen">
       <div class="result-header">
@@ -319,10 +316,11 @@ function renderLaunchSequence(container, result, gameState) {
 
       <div class="result-actions">
         <button id="share-btn" class="btn-primary">📋 Copy Share Card</button>
+        <button id="leaderboard-btn" class="btn-secondary">📡 View Leaderboard</button>
         <div id="share-confirm" class="share-confirm" style="display:none">✅ Copied!</div>
       </div>
 
-      <div class="scoreboard-notice">📡 Daily Scoreboard — Not available in Alpha</div>
+      <div class="scoreboard-notice">📡 Daily Leaderboard — scores may take a moment to appear</div>
     </div>
   `;
 
@@ -347,6 +345,11 @@ function renderLaunchSequence(container, result, gameState) {
       setTimeout(() => { confirm.style.display = 'none'; }, 2500);
     }
   });
+
+  const lbBtn = container.querySelector('#leaderboard-btn');
+  if (lbBtn && onLeaderboard) {
+    lbBtn.addEventListener('click', onLeaderboard);
+  }
 }
 
 export {

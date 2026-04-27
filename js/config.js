@@ -1,7 +1,7 @@
 // config.js — Project Acecent
 // Version and readme content live here
 
-const VERSION = '0.1.0-alpha';
+const VERSION = '0.2.0-alpha';
 
 const README = {
   version: VERSION,
@@ -127,6 +127,21 @@ Penalties are applied after multipliers. Penalty-blocking cards are processed fi
       id: 'patchnotes',
       title: '📋 Patch Notes',
       patches: [
+        {
+          version: '0.2.0-alpha',
+          date: 'April 2026',
+          notes: [
+            'New quick-view strip showing hand at a glance',
+            'Horizontal scrolling detail cards with light background',
+            'Suit symbols now visible on dark backgrounds',
+            'Firebase daily leaderboard — scores submitted after launch',
+            'README/patch notes modal on first load and version bumps',
+            'Floating help button accessible from any screen',
+            'Privacy disclaimer on name entry screen',
+            'Vibe code disclaimer and version number in footer',
+            'Launch Failure no longer implies casualties',
+          ]
+        },
         {
           version: '0.1.0-alpha',
           date: 'April 2026',
