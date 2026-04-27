@@ -13,6 +13,7 @@
     document.getElementById('debug').textContent = 'Script started';
     import { GameState, PHASES } from './js/game.js';
     import { renderNameEntry, renderHand, renderLaunchSequence, playRocketAnimation } from './js/ui.js';
+    import { showReadme, shouldShow, isVersionBump } from './js/readme.js';
 
     const app = document.getElementById('app');
     const gs = new GameState();
@@ -96,6 +97,11 @@
     }
 
     render();
+
+    // Show readme on first load or version bump
+    if (shouldShow()) {
+      setTimeout(() => showReadme(isVersionBump()), 400);
+    }
   </script>
 </body>
 </html>
