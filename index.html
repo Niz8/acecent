@@ -8,13 +8,20 @@
 </head>
 <body>
   <div id="debug" style="color:white;padding:1rem;font-size:12px;position:fixed;top:0;left:0;z-index:9999">Loading...</div>
+  <button id="floating-help-btn" class="floating-help-btn" title="How to Play">ℹ️</button>
   <div id="app"></div>
   <script type="module">
     import { GameState, PHASES } from './js/game.js';
     import { renderNameEntry, renderHand, renderLaunchSequence, playRocketAnimation } from './js/ui.js';
     import { showReadme, shouldShow, isVersionBump } from './js/readme.js';
+    import { initFirebase, submitScore } from './js/firebase.js';
+    import { renderLeaderboard } from './js/leaderboard.js';
 
     document.getElementById('debug').textContent = 'Script started';
+    initFirebase();
+
+    // Floating help button — always accessible
+    document.getElementById('floating-help-btn').addEventListener('click', () => showReadme(false));
 
     const app = document.getElementById('app');
     const gs = new GameState();
@@ -75,8 +82,13 @@
 
     // Listen for launch complete
     gs.on('launchComplete', (result) => {
+      // Submit score to Firebase
+      submitScore(gs.playerName, result.altitude, result.tier.name);
+
       playRocketAnimation(app, () => {
-        renderLaunchSequence(app, result, gs);
+        renderLaunchSequence(app, result, gs, () => {
+          renderLeaderboard(app, gs.playerName, result.altitude, () => render());
+        });
       });
     });
 

@@ -763,8 +763,51 @@ html, body {
 }
 
 /* =====================
-   README MODAL
+   FLOATING HELP BUTTON
    ===================== */
+
+.floating-help-btn {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 1500;
+  background: #1e1e38;
+  border: 1px solid #2a2a50;
+  border-radius: 50%;
+  width: 2.75rem;
+  height: 2.75rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  line-height: 1;
+}
+
+.floating-help-btn:hover {
+  background: #2a2a50;
+  border-color: #f5c518;
+  transform: scale(1.08);
+}
+
+.floating-help-btn:active {
+  transform: scale(0.95);
+}
+
+/* =====================
+   NAME DISCLAIMER
+   ===================== */
+
+.name-disclaimer {
+  font-size: 0.68rem;
+  color: #6666aa;
+  text-align: center;
+  line-height: 1.5;
+  max-width: 280px;
+  font-family: 'Courier New', Courier, monospace;
+}
 
 .readme-overlay {
   position: fixed;
@@ -1056,4 +1099,109 @@ html, body {
   letter-spacing: 0.1em;
   text-align: center;
   font-family: 'Courier New', Courier, monospace;
+}
+
+/* =====================
+   LEADERBOARD SCREEN
+   ===================== */
+
+.leaderboard-screen {
+  gap: 1rem;
+}
+
+.leaderboard-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #1a1a3a;
+}
+
+.leaderboard-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f5c518;
+  letter-spacing: 0.06em;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.leaderboard-date {
+  font-size: 0.72rem;
+  color: #44446a;
+  letter-spacing: 0.08em;
+  font-family: 'Courier New', Courier, monospace;
+  width: 100%;
+}
+
+.leaderboard-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.leaderboard-loading {
+  font-size: 0.8rem;
+  color: #44446a;
+  text-align: center;
+  padding: 2rem;
+  font-family: 'Courier New', Courier, monospace;
+  animation: pulse 1s ease infinite alternate;
+}
+
+.leaderboard-empty {
+  font-size: 0.8rem;
+  color: #6666aa;
+  text-align: center;
+  padding: 2rem;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.leaderboard-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  background: #12122a;
+  border: 1px solid #1a1a3a;
+  border-radius: 6px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.leaderboard-you {
+  background: #1a1a10;
+  border-color: #f5c518;
+}
+
+.leaderboard-rank {
+  font-size: 0.9rem;
+  min-width: 2rem;
+  text-align: center;
+}
+
+.leaderboard-name {
+  font-size: 0.85rem;
+  color: #e8e8f0;
+  font-weight: 700;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaderboard-you .leaderboard-name {
+  color: #f5c518;
+}
+
+.leaderboard-tier {
+  font-size: 0.65rem;
+  color: #6666aa;
+  letter-spacing: 0.04em;
+}
+
+.leaderboard-altitude {
+  font-size: 0.78rem;
+  color: #aaaacc;
+  white-space: nowrap;
 }
