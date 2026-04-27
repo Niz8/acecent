@@ -5,7 +5,7 @@ const FUEL_PER_BURN_UNIT = 1000; // 1 burn value unit = 1000 ft base
 
 // Altitude tiers
 const ALTITUDE_TIERS = [
-  { name: 'Launch Failure',  emoji: '💀', min: 0,       max: 9999   },
+  { name: 'Launch Failure',  emoji: '📉', min: 0,       max: 9999   },
   { name: 'Troposphere',     emoji: '🌤️', min: 10000,   max: 49999  },
   { name: 'Stratosphere',    emoji: '🌥️', min: 50000,   max: 99999  },
   { name: 'Mesosphere',      emoji: '🌌', min: 100000,  max: 249999 },

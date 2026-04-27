@@ -2,6 +2,8 @@
 // Rendering, card display, animation, phase transitions
 
 import { copyShareCard } from './share.js';
+import { showReadme } from './readme.js';
+import { VERSION } from './config.js';
 
 // --- Suit helpers ---
 // Force emoji presentation variant with U+FE0F to avoid black-on-black on iOS
@@ -141,8 +143,10 @@ function renderNameEntry(container, gameState, onStart) {
           🚀 BEGIN MISSION
         </button>
       </div>
-      <div class="scoreboard-notice">
-        📡 Scoreboard — Coming Soon
+      <div class="name-entry-footer">
+        <button class="info-btn" id="info-btn">ℹ️ How to Play / Card List</button>
+        <div class="scoreboard-notice">📡 Scoreboard — Coming Soon</div>
+        <div class="version-footer">v${VERSION} · vibe coded · use at your own risk</div>
       </div>
     </div>
   `;
@@ -164,6 +168,9 @@ function renderNameEntry(container, gameState, onStart) {
 
   btn.addEventListener('click', tryStart);
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryStart(); });
+
+  const infoBtn = container.querySelector('#info-btn');
+  if (infoBtn) infoBtn.addEventListener('click', () => showReadme(false));
 }
 
 function renderHand(container, gameState, onRedraw, onLaunch) {
