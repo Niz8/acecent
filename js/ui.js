@@ -173,6 +173,17 @@ function renderNameEntry(container, gameState, onStart) {
 function renderHand(container, gameState, onRedraw, onLaunch) {
   const gs = gameState;
   const hand = gs.hand;
+  const selectedCount = gs.selectedForDiscard.size;
+
+  // Save scroll position before re-render
+  const existingScroll = container.querySelector('#detail-scroll');
+  const savedScrollLeft = existingScroll ? existingScroll.scrollLeft : 0;
+
+  // Build penalty status
+  const penaltyStatus = getPenaltyStatus(gs);
+
+  // Next card peek
+  const nextCard = gs.deck[gs.drawIndex] || null;
 
   container.innerHTML = `
     <div class="screen hand-screen">
@@ -186,7 +197,12 @@ function renderHand(container, gameState, onRedraw, onLaunch) {
       </div>
 
       <div class="hand-instructions">
-        Tap a card to select it for burning as ⛽ fuel, then redraw or launch.
+        Tap a card below to select it for burning as ⛽ fuel, then redraw or launch.
+      </div>
+
+      <!-- Penalty status bar -->
+      <div class="penalty-bar" id="penalty-bar">
+        ${penaltyStatus.map(p => `<div class="penalty-pill ${p.type}">${p.icon} ${p.text}</div>`).join('')}
       </div>
 
       <!-- Quick-view strip -->
@@ -207,9 +223,12 @@ function renderHand(container, gameState, onRedraw, onLaunch) {
 
       <!-- Actions -->
       <div class="hand-actions">
-        <button id="redraw-btn" class="btn-secondary" ${!gs.canRedraw() ? 'disabled' : ''}>
-          🔄 Redraw (${gs.redraws} left)
-        </button>
+        <div class="redraw-wrap">
+          <button id="redraw-btn" class="btn-secondary" ${!gs.canRedraw() ? 'disabled' : ''}>
+            🔄 Redraw (${gs.redraws} left)
+          </button>
+          ${selectedCount > 0 ? `<span class="selected-count">${selectedCount} card${selectedCount !== 1 ? 's' : ''} selected</span>` : ''}
+        </div>
         <button id="do-launch-btn" class="btn-primary">
           🚀 LAUNCH
         </button>
@@ -218,21 +237,36 @@ function renderHand(container, gameState, onRedraw, onLaunch) {
     </div>
   `;
 
-  // Quick-view strip
+  // Quick-view strip — tap scrolls detail to that card, does NOT select
   const strip = container.querySelector('#quickview-strip');
-  for (const card of hand) {
+  hand.forEach((card, index) => {
     const isSelected = gs.selectedForDiscard.has(card.id);
     const chip = renderChip(card, gameState, isSelected);
     chip.addEventListener('click', () => {
-      gs.toggleSelectCard(card.id);
-      renderHand(container, gameState, onRedraw, onLaunch);
+      // Scroll detail area to this card
+      const scroll = container.querySelector('#detail-scroll');
+      if (scroll) {
+        const cardWidth = 200 + 12; // card width + gap
+        scroll.scrollTo({ left: index * cardWidth, behavior: 'smooth' });
+      }
     });
     strip.appendChild(chip);
+  });
+
+  // Next card peek chip
+  if (nextCard) {
+    const peekChip = document.createElement('div');
+    peekChip.className = 'hand-chip chip-peek';
+    const sym = getSuitSymbol(nextCard.suit);
+    const col = getSuitColor(nextCard.suit);
+    peekChip.innerHTML = `<span class="chip-peek-label">NEXT</span><span style="color:${col}">${sym}</span>`;
+    peekChip.title = 'Next card in deck (suit only)';
+    strip.appendChild(peekChip);
   }
 
-  // Detail scroll
+  // Detail scroll — tap DOES select/deselect
   const scroll = container.querySelector('#detail-scroll');
-  for (const card of hand) {
+  hand.forEach((card) => {
     const isSelected = gs.selectedForDiscard.has(card.id);
     const detailCard = renderDetailCard(card, gameState, isSelected);
     detailCard.addEventListener('click', () => {
@@ -240,6 +274,11 @@ function renderHand(container, gameState, onRedraw, onLaunch) {
       renderHand(container, gameState, onRedraw, onLaunch);
     });
     scroll.appendChild(detailCard);
+  });
+
+  // Restore scroll position after re-render
+  if (savedScrollLeft > 0) {
+    scroll.scrollLeft = savedScrollLeft;
   }
 
   // Burned chips
@@ -260,6 +299,46 @@ function renderHand(container, gameState, onRedraw, onLaunch) {
   container.querySelector('#do-launch-btn').addEventListener('click', () => {
     if (gs.canLaunch()) onLaunch();
   });
+}
+
+// --- Penalty Status Bar ---
+function getPenaltyStatus(gs) {
+  const pills = [];
+  const heldCards = gs.hand;
+  const burnedCount = gs.burnedCards.length;
+
+  const hasHeartBlock = heldCards.some(c =>
+    c.id === 'K_hearts' || c.id === 'Q_hearts' || c.id === 'A_hearts' || c.id === 'Q_clubs'
+  );
+  const hasKingHeartsBlock = heldCards.some(c => c.id === 'K_hearts');
+
+  const redSuits = ['hearts', 'diamonds'];
+  const blackSuits = ['spades', 'clubs'];
+  const redCount = heldCards.filter(c => redSuits.includes(c.suit)).length;
+  const blackCount = heldCards.filter(c => blackSuits.includes(c.suit)).length;
+  const hasConflict = redCount >= 2 && blackCount >= 2;
+
+  // Engine stress
+  if (burnedCount >= 4 && !hasHeartBlock) {
+    pills.push({ type: 'pill-danger', icon: '⚠️', text: 'Engine Stress active' });
+  } else if (burnedCount === 3 && !hasHeartBlock) {
+    pills.push({ type: 'pill-warn', icon: '🟡', text: 'One more burn risks stress' });
+  } else if (burnedCount >= 4 && hasHeartBlock) {
+    pills.push({ type: 'pill-safe', icon: '🛡️', text: 'Stress blocked' });
+  } else {
+    pills.push({ type: 'pill-safe', icon: '✅', text: 'No stress' });
+  }
+
+  // Signal interference
+  if (hasConflict && !hasKingHeartsBlock) {
+    pills.push({ type: 'pill-danger', icon: '⚠️', text: 'Signal interference active' });
+  } else if (hasConflict && hasKingHeartsBlock) {
+    pills.push({ type: 'pill-safe', icon: '🛡️', text: 'Conflict blocked' });
+  } else {
+    pills.push({ type: 'pill-safe', icon: '✅', text: 'No interference' });
+  }
+
+  return pills;
 }
 
 // --- Rocket Animation ---

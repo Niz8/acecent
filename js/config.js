@@ -1,7 +1,7 @@
 // config.js — Project Acecent
 // Version and readme content live here
 
-const VERSION = '0.2.0-alpha';
+const VERSION = '0.3.0-alpha';
 
 const README = {
   version: VERSION,
@@ -127,6 +127,22 @@ Penalties are applied after multipliers. Penalty-blocking cards are processed fi
       id: 'patchnotes',
       title: '📋 Patch Notes',
       patches: [
+        {
+          version: '0.3.0-alpha',
+          date: 'April 2026',
+          notes: [
+            'Chip tap now scrolls to card in detail view — no longer selects for burn',
+            'Only tapping detail card selects it for burning',
+            'Selected card count shown near redraw button',
+            'Orange selected state now overwrites green condition glow on chips and cards',
+            'Detail scroll position preserved after selecting a card',
+            'Penalty status bar shows engine stress and signal interference warnings live',
+            'Next card suit peek shown at end of quick-view strip',
+            'Leaderboard close button now returns to result screen correctly',
+            'Already-played screen now has View Leaderboard button',
+            'Removed debug Script started text',
+          ]
+        },
         {
           version: '0.2.0-alpha',
           date: 'April 2026',
