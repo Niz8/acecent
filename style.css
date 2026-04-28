@@ -306,6 +306,95 @@ html, body {
   border-color: #50c878;
 }
 
+/* Orange selected ALWAYS overwrites green condition glow */
+.chip-selected.chip-active {
+  border-color: #f5c518;
+  background: #3a3010;
+}
+
+/* =====================
+   PENALTY STATUS BAR
+   ===================== */
+
+.penalty-bar {
+  width: 100%;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0 1.25rem;
+  flex-wrap: wrap;
+}
+
+.penalty-pill {
+  font-size: 0.68rem;
+  font-family: 'Courier New', Courier, monospace;
+  padding: 0.3rem 0.6rem;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pill-safe {
+  background: #0d2a1a;
+  color: #50c878;
+  border: 1px solid #1a4a2a;
+}
+
+.pill-warn {
+  background: #2a2000;
+  color: #f5c518;
+  border: 1px solid #4a3800;
+}
+
+.pill-danger {
+  background: #2a0d0d;
+  color: #e8334a;
+  border: 1px solid #4a1a1a;
+}
+
+/* =====================
+   PEEK CHIP
+   ===================== */
+
+.chip-peek {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  background: #12122a;
+  border: 1px dashed #2a2a4a;
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  cursor: default;
+  opacity: 0.8;
+}
+
+.chip-peek-label {
+  font-size: 0.5rem;
+  letter-spacing: 0.12em;
+  color: #44446a;
+  line-height: 1;
+}
+
+/* =====================
+   SELECTED COUNT + REDRAW WRAP
+   ===================== */
+
+.redraw-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.selected-count {
+  font-size: 0.68rem;
+  color: #f5c518;
+  font-family: 'Courier New', Courier, monospace;
+  letter-spacing: 0.06em;
+}
+
 .chip-rank {
   color: #e8e8f0;
 }
@@ -379,6 +468,13 @@ html, body {
 .detail-condition-met .detail-card-inner {
   border-color: #50c878;
   box-shadow: 0 0 0 3px rgba(80, 200, 120, 0.2), 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Orange selected overwrites green condition glow */
+.detail-selected.detail-condition-met .detail-card-inner {
+  border-color: #f5c518;
+  box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.25), 0 2px 8px rgba(0,0,0,0.1);
+  background: #fffbee;
 }
 
 .detail-condition-unmet .detail-card-inner {
