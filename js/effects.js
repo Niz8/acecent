@@ -47,26 +47,23 @@ function calculateFuel(burnedCards, heldCards, gs) {
   let fuel = 0;
   const log = [];
 
-  // Check for King of Spades fuel doubler
+  // Spade fuel multipliers — multiplicative stacking
   const hasKingSpades = heldCards.some(c => c.id === 'K_spades');
-  // Check for Queen of Diamonds fuel efficiency
-  const hasQueenDiamonds = heldCards.some(c => c.id === 'Q_diamonds');
+  const has10Spades = heldCards.some(c => c.id === '10_spades');
 
   for (const card of burnedCards) {
     let cardFuel = card.burnValue * FUEL_PER_BURN_UNIT;
     let multiplier = 1;
 
-    if (hasKingSpades && card.suit === 'spades') {
-      multiplier *= 2;
-    }
-    if (hasQueenDiamonds) {
-      multiplier *= 1.2;
+    if (card.suit === 'spades') {
+      if (hasKingSpades) multiplier *= 2;
+      if (has10Spades) multiplier *= 1.5;
     }
 
     const finalFuel = Math.round(cardFuel * multiplier);
     fuel += finalFuel;
 
-    const multNote = multiplier > 1 ? ` (✖️${multiplier.toFixed(1)}x boosted)` : '';
+    const multNote = multiplier > 1 ? ` (✖️${multiplier.toFixed(2)}x boosted)` : '';
     log.push(`⛽ ${card.emoji} ${card.rank}${card.suitSymbol} burned: +${finalFuel.toLocaleString()} ft${multNote}`);
   }
 
@@ -77,7 +74,8 @@ function calculateFuel(burnedCards, heldCards, gs) {
 function checkEnginePenalties(burnedCards, heldCards, log) {
   const penalties = [];
   const hasHeartsPenaltyBlock = heldCards.some(c =>
-    c.id === 'K_hearts' || c.id === 'Q_hearts' || c.id === 'A_hearts' || c.id === 'Q_clubs'
+    c.id === 'K_hearts' || c.id === 'Q_hearts' || c.id === 'A_hearts' ||
+    c.id === 'J_hearts' || c.id === '5_hearts' || c.id === '6_hearts'
   );
 
   if (burnedCards.length >= 4 && !hasHeartsPenaltyBlock) {

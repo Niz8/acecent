@@ -18,7 +18,6 @@ function sfc32(a, b, c, d) {
 function getDailySeed() {
   const now = new Date();
   const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-  // Hash the date string into 4 numbers for sfc32
   let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
   for (let i = 0; i < dateStr.length; i++) {
     h1 = Math.imul(h1 ^ dateStr.charCodeAt(i), 0x9e3779b9);
@@ -37,10 +36,6 @@ function seededShuffle(array, rng) {
 }
 
 // --- Card Definitions ---
-// Each card: { id, rank, suit, suitSymbol, burnValue, holdEffect, burnEffect, emoji, negative }
-// holdEffect: { desc, emoji, fn(gameState) -> modifier object }
-// burnEffect: { desc, emoji, fn(gameState) -> modifier object } — triggered on discard
-
 const SUITS = {
   spades:   { name: 'Spades',   symbol: '♠', emoji: '🖤', theme: 'Thrust' },
   hearts:   { name: 'Hearts',   symbol: '♥', emoji: '❤️', theme: 'Life Support' },
@@ -50,40 +45,50 @@ const SUITS = {
 
 const RANKS = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
 
-// Burn values by rank
 const BURN_VALUES = {
   '2': 2, '3': 3, '4': 4, '5': 5, '6': 6,
   '7': 7, '8': 8, '9': 9, '10': 10,
   'J': 11, 'Q': 12, 'K': 13, 'A': 15
 };
 
-// Special overrides and effects per card
-// Effects use gameState to compute modifiers
-// Modifier shape: { altitudeFlat?, altitudeMult?, fuelMult?, redraws?, blockPenalty?, message }
+// Diamonds burn for floor(face/2) — holding them is the play
+const DIAMOND_BURN_VALUES = {
+  '2': 1, '3': 1, '4': 2, '5': 2, '6': 3,
+  '7': 3, '8': 4, '9': 4, '10': 5,
+  'J': 5, 'Q': 6, 'K': 6, 'A': 7
+};
 
 const CARD_EFFECTS = {
-  // --- SPADES: Thrust ---
+
+  // ============================================================
+  // SPADES — Thrust: raw power, spade combos, fuel multipliers
+  // ============================================================
+
   'A_spades': {
     emoji: '🚀',
     holdEffect: {
       desc: '✖️1.5x final altitude — only if you hold no pairs',
       emoji: '✖️',
       condition: (gs) => !gs.handHasPair,
-      fn: (gs) => gs.handHasPair ? { message: '❌ Ace of Spades: pair detected, bonus lost' } : { altitudeMult: 1.5, message: '🚀 Ace of Spades: NO PAIRS — 1.5x THRUST!' }
+      fn: (gs) => gs.handHasPair
+        ? { message: '❌ Ace of Spades: pair detected, bonus lost' }
+        : { altitudeMult: 1.5, message: '🚀 Ace of Spades: NO PAIRS — 1.5x THRUST!' }
     }
   },
+
   'K_spades': {
     emoji: '👑',
     holdEffect: {
-      desc: '✖️2x fuel from all burned ♠',
+      desc: '✖️2x fuel from all burned ♠️',
       emoji: '✖️',
-      fn: (gs) => ({ fuelMult: 2, fuelMultSuit: 'spades', message: '👑 King of Spades: Spade fuel DOUBLED!' })
+      fn: () => ({ fuelMult: 2, fuelMultSuit: 'spades', message: '👑 King of Spades: Spade fuel DOUBLED!' })
     }
   },
+
   'Q_spades': {
     emoji: '⚡',
     holdEffect: {
-      desc: '🚀 +15,000 ft if you hold 3+ ♠',
+      desc: '🚀 +15,000 ft if you hold 3+ ♠️',
       emoji: '🚀',
       condition: (gs) => gs.heldSuitCount('spades') >= 3,
       fn: (gs) => gs.heldSuitCount('spades') >= 3
@@ -91,6 +96,7 @@ const CARD_EFFECTS = {
         : { message: '⚡ Queen of Spades: Need 3 spades — no bonus' }
     }
   },
+
   'J_spades': {
     emoji: '💥',
     holdEffect: {
@@ -99,6 +105,28 @@ const CARD_EFFECTS = {
       fn: () => ({ altitudeFlat: 8000, message: '💥 Jack of Spades: Booster ignition! +8,000 ft' })
     }
   },
+
+  '10_spades': {
+    emoji: '🔥',
+    holdEffect: {
+      desc: '✖️1.5x fuel from all burned ♠️',
+      emoji: '✖️',
+      fn: () => ({ fuelMult: 1.5, fuelMultSuit: 'spades', message: '🔥 10 of Spades: Auxiliary thrusters! Spade fuel x1.5' })
+    }
+  },
+
+  '7_spades': {
+    emoji: '🛸',
+    holdEffect: {
+      desc: '🚀 +5,000 ft if you hold any other ♠️',
+      emoji: '🚀',
+      condition: (gs) => gs.heldSuitCount('spades') >= 2,
+      fn: (gs) => gs.heldSuitCount('spades') >= 2
+        ? { altitudeFlat: 5000, message: '🛸 7 of Spades: Spade formation! +5,000 ft' }
+        : { message: '🛸 7 of Spades: No spade wingman — no bonus' }
+    }
+  },
+
   '2_spades': {
     burnValue: 6,
     emoji: '⛽',
@@ -108,19 +136,11 @@ const CARD_EFFECTS = {
       fn: () => ({ fuelBonus: 6, message: '⛽ 2 of Spades: High-octane fuel! Extra burn' })
     }
   },
-  '7_spades': {
-    emoji: '🛸',
-    holdEffect: {
-      desc: '🚀 +5,000 ft if you hold any ♦',
-      emoji: '🔗',
-      condition: (gs) => gs.heldSuitCount('diamonds') >= 1,
-      fn: (gs) => gs.heldSuitCount('diamonds') >= 1
-        ? { altitudeFlat: 5000, message: '🛸 7 of Spades: Engineering sync! +5,000 ft' }
-        : { message: '🛸 7 of Spades: No diamonds — sync failed' }
-    }
-  },
 
-  // --- HEARTS: Life Support ---
+  // ============================================================
+  // HEARTS — Life Support: penalty blocking, crew synergy
+  // ============================================================
+
   'A_hearts': {
     emoji: '💗',
     holdEffect: {
@@ -129,124 +149,164 @@ const CARD_EFFECTS = {
       fn: () => ({ blockPenalty: true, altitudeFlat: 10000, message: '💗 Ace of Hearts: Crew protected! Penalty blocked + 10,000 ft' })
     }
   },
+
   'K_hearts': {
     emoji: '🫀',
     holdEffect: {
-      desc: '🛡️ Blocks all suit conflict penalties',
+      desc: '🛡️ Blocks ALL suit conflict penalties',
       emoji: '🛡️',
-      fn: () => ({ blockSuitPenalty: true, message: '🫀 King of Hearts: Systems stable. Conflict shielded!' })
+      fn: () => ({ blockSuitPenalty: true, message: '🫀 King of Hearts: Systems stable. All conflicts shielded!' })
     }
   },
+
   'Q_hearts': {
     emoji: '🌹',
     holdEffect: {
-      desc: '🛡️ Negates one penalty card in hand',
+      desc: '🛡️ Blocks one penalty',
       emoji: '🛡️',
       fn: () => ({ blockPenalty: true, message: '🌹 Queen of Hearts: One penalty neutralized!' })
     }
   },
+
   'J_hearts': {
     emoji: '🩺',
     holdEffect: {
-      desc: '🚀 +6,000 ft if no ♠ in hand',
-      emoji: '🚀',
-      condition: (gs) => gs.heldSuitCount('spades') === 0,
-      fn: (gs) => gs.heldSuitCount('spades') === 0
-        ? { altitudeFlat: 6000, message: '🩺 Jack of Hearts: Clean systems! +6,000 ft' }
-        : { message: '🩺 Jack of Hearts: Spade interference — no bonus' }
+      desc: '🛡️ Blocks one penalty + 🚀 +4,000 ft',
+      emoji: '🛡️',
+      fn: () => ({ blockPenalty: true, altitudeFlat: 4000, message: '🩺 Jack of Hearts: Medic on deck! Penalty blocked + 4,000 ft' })
     }
   },
-  '3_hearts': {
-    emoji: '🎁',
-    burnEffect: {
-      desc: '🎲 +1 redraw when burned',
-      emoji: '🔄',
-      fn: () => ({ redraws: 1, message: '🎁 3 of Hearts: Backup O2 tank! +1 Redraw' })
-    }
-  },
-  '4_hearts': {
-    emoji: '🎁',
-    burnEffect: {
-      desc: '🎲 +1 redraw when burned',
-      emoji: '🔄',
-      fn: () => ({ redraws: 1, message: '🎁 4 of Hearts: Reserve systems! +1 Redraw' })
-    }
-  },
-  '2_hearts': {
-    emoji: '🎁',
-    burnEffect: {
-      desc: '🎲 +1 redraw when burned',
-      emoji: '🔄',
-      fn: () => ({ redraws: 1, message: '🎁 2 of Hearts: Contingency fuel! +1 Redraw' })
-    }
-  },
+
   '9_hearts': {
     emoji: '💞',
     holdEffect: {
-      desc: '🚀 +3,000 ft per ♥ held (including this)',
+      desc: '🚀 +3,000 ft per ♥️ held (including this)',
       emoji: '🚀',
       fn: (gs) => {
         const count = gs.heldSuitCount('hearts');
-        return { altitudeFlat: count * 3000, message: `💞 9 of Hearts: Crew synergy! +${count * 3000} ft` };
+        return { altitudeFlat: count * 3000, message: `💞 9 of Hearts: Crew synergy! +${(count * 3000).toLocaleString()} ft` };
       }
     }
   },
 
-  // --- DIAMONDS: Engineering ---
+  '6_hearts': {
+    emoji: '🛡️',
+    holdEffect: {
+      desc: '🛡️ Blocks one penalty',
+      emoji: '🛡️',
+      fn: () => ({ blockPenalty: true, message: '🛡️ 6 of Hearts: Emergency shielding! Penalty blocked' })
+    }
+  },
+
+  '5_hearts': {
+    emoji: '🛡️',
+    holdEffect: {
+      desc: '🛡️ Blocks one penalty',
+      emoji: '🛡️',
+      fn: () => ({ blockPenalty: true, message: '🛡️ 5 of Hearts: Backup shielding! Penalty blocked' })
+    }
+  },
+
+  '4_hearts': {
+    emoji: '🎁',
+    burnEffect: {
+      desc: '🔄 +1 redraw when burned',
+      emoji: '🔄',
+      fn: () => ({ redraws: 1, message: '🎁 4 of Hearts: Reserve systems! +1 Redraw' })
+    }
+  },
+
+  '3_hearts': {
+    emoji: '🎁',
+    burnEffect: {
+      desc: '🔄 +1 redraw when burned',
+      emoji: '🔄',
+      fn: () => ({ redraws: 1, message: '🎁 3 of Hearts: Backup O2 tank! +1 Redraw' })
+    }
+  },
+
+  '2_hearts': {
+    emoji: '🎁',
+    burnEffect: {
+      desc: '🔄 +1 redraw when burned',
+      emoji: '🔄',
+      fn: () => ({ redraws: 1, message: '🎁 2 of Hearts: Contingency fuel! +1 Redraw' })
+    }
+  },
+
+  // ============================================================
+  // DIAMONDS — Engineering: synergy and pairs, low burn value
+  // All diamonds burn for floor(face/2)
+  // ============================================================
+
   'A_diamonds': {
     emoji: '💠',
     holdEffect: {
-      desc: '✖️1.5x final altitude — only if you hold no pairs',
-      emoji: '✖️',
-      condition: (gs) => !gs.handHasPair,
-      fn: (gs) => gs.handHasPair
-        ? { message: '❌ Ace of Diamonds: pair detected, multiplier lost' }
-        : { altitudeMult: 1.5, message: '💠 Ace of Diamonds: Optimal configuration! 1.5x altitude' }
+      desc: '🚀 +30,000 ft if you hold 3 of a kind OR 4 of same suit',
+      emoji: '🚀',
+      condition: (gs) => {
+        const rankCounts = {};
+        const suitCounts = {};
+        for (const c of gs.heldCards) {
+          rankCounts[c.rank] = (rankCounts[c.rank] || 0) + 1;
+          suitCounts[c.suit] = (suitCounts[c.suit] || 0) + 1;
+        }
+        return Object.values(rankCounts).some(v => v >= 3) || Object.values(suitCounts).some(v => v >= 4);
+      },
+      fn: (gs) => {
+        const rankCounts = {};
+        const suitCounts = {};
+        for (const c of gs.heldCards) {
+          rankCounts[c.rank] = (rankCounts[c.rank] || 0) + 1;
+          suitCounts[c.suit] = (suitCounts[c.suit] || 0) + 1;
+        }
+        const hasThreeOfKind = Object.values(rankCounts).some(v => v >= 3);
+        const hasFourSuit = Object.values(suitCounts).some(v => v >= 4);
+        if (hasThreeOfKind || hasFourSuit) {
+          const reason = hasThreeOfKind ? '3 of a kind' : '4 of same suit';
+          return { altitudeFlat: 30000, message: `💠 Ace of Diamonds: Perfect configuration (${reason})! +30,000 ft` };
+        }
+        return { message: '💠 Ace of Diamonds: Need 3 of a kind or 4 of same suit — no bonus' };
+      }
     }
   },
+
   'K_diamonds': {
     emoji: '🔬',
     holdEffect: {
-      desc: '✖️1.3x final altitude',
-      emoji: '✖️',
-      fn: () => ({ altitudeMult: 1.3, message: '🔬 King of Diamonds: Engineering excellence! 1.3x altitude' })
+      desc: '🚀 +20,000 ft — only if you burned zero ♦️',
+      emoji: '🚀',
+      condition: (gs) => gs.burnedSuitCount('diamonds') === 0,
+      fn: (gs) => gs.burnedSuitCount('diamonds') === 0
+        ? { altitudeFlat: 20000, message: '🔬 King of Diamonds: Pure engineering! +20,000 ft' }
+        : { message: '🔬 King of Diamonds: Burned diamonds detected — bonus lost' }
     }
   },
+
   'Q_diamonds': {
     emoji: '⚙️',
     holdEffect: {
-      desc: '✖️1.2x fuel efficiency (all fuel)',
-      emoji: '✖️',
-      fn: () => ({ fuelMult: 1.2, fuelMultSuit: 'all', message: '⚙️ Queen of Diamonds: Fuel efficiency optimized! 1.2x all fuel' })
+      desc: '🚀 +8,000 ft if you hold a pair',
+      emoji: '🚀',
+      condition: (gs) => gs.handHasPair,
+      fn: (gs) => gs.handHasPair
+        ? { altitudeFlat: 8000, message: '⚙️ Queen of Diamonds: Matched components! +8,000 ft' }
+        : { message: '⚙️ Queen of Diamonds: No pair — no bonus' }
     }
   },
+
   'J_diamonds': {
     emoji: '🛠️',
     holdEffect: {
-      desc: '🚀 +5,000 ft if you hold 2+ ♦',
+      desc: '🚀 +6,000 ft if no ♠️ in hand',
       emoji: '🚀',
-      condition: (gs) => gs.heldSuitCount('diamonds') >= 2,
-      fn: (gs) => gs.heldSuitCount('diamonds') >= 2
-        ? { altitudeFlat: 5000, message: '🛠️ Jack of Diamonds: Systems integrated! +5,000 ft' }
-        : { message: '🛠️ Jack of Diamonds: Need 2 diamonds — no bonus' }
+      condition: (gs) => gs.heldSuitCount('spades') === 0,
+      fn: (gs) => gs.heldSuitCount('spades') === 0
+        ? { altitudeFlat: 6000, message: '🛠️ Jack of Diamonds: Clean integration! +6,000 ft' }
+        : { message: '🛠️ Jack of Diamonds: Spade interference — no bonus' }
     }
   },
-  '3_diamonds': {
-    emoji: '🎁',
-    burnEffect: {
-      desc: '🎲 +1 redraw when burned',
-      emoji: '🔄',
-      fn: () => ({ redraws: 1, message: '🎁 3 of Diamonds: Recalibration! +1 Redraw' })
-    }
-  },
-  '2_diamonds': {
-    emoji: '🎁',
-    burnEffect: {
-      desc: '🎲 +1 redraw when burned',
-      emoji: '🔄',
-      fn: () => ({ redraws: 1, message: '🎁 2 of Diamonds: Blueprint revision! +1 Redraw' })
-    }
-  },
+
   '10_diamonds': {
     emoji: '📡',
     holdEffect: {
@@ -254,12 +314,39 @@ const CARD_EFFECTS = {
       emoji: '🚀',
       fn: (gs) => {
         const suits = new Set(gs.heldCards.map(c => c.suit));
-        return { altitudeFlat: suits.size * 4000, message: `📡 10 of Diamonds: Multi-system sync! +${suits.size * 4000} ft` };
+        return { altitudeFlat: suits.size * 4000, message: `📡 10 of Diamonds: Multi-system sync! +${(suits.size * 4000).toLocaleString()} ft` };
       }
     }
   },
 
-  // --- CLUBS: Mission Control ---
+  '3_diamonds': {
+    emoji: '💎',
+    holdEffect: {
+      desc: '🚀 +5,000 ft if you hold a pair',
+      emoji: '🚀',
+      condition: (gs) => gs.handHasPair,
+      fn: (gs) => gs.handHasPair
+        ? { altitudeFlat: 5000, message: '💎 3 of Diamonds: Redundant systems! +5,000 ft' }
+        : { message: '💎 3 of Diamonds: No pair — no bonus' }
+    }
+  },
+
+  '2_diamonds': {
+    emoji: '💎',
+    holdEffect: {
+      desc: '🚀 +3,000 ft if you hold a pair',
+      emoji: '🚀',
+      condition: (gs) => gs.handHasPair,
+      fn: (gs) => gs.handHasPair
+        ? { altitudeFlat: 3000, message: '💎 2 of Diamonds: Dual calibration! +3,000 ft' }
+        : { message: '💎 2 of Diamonds: No pair — no bonus' }
+    }
+  },
+
+  // ============================================================
+  // CLUBS — Mission Control: redraws, burn bonuses, peek
+  // ============================================================
+
   'A_clubs': {
     emoji: '🎲',
     burnEffect: {
@@ -268,6 +355,7 @@ const CARD_EFFECTS = {
       fn: () => ({ redraws: 2, message: '🎲 Ace of Clubs: Mission reset! +2 Redraws' })
     }
   },
+
   'K_clubs': {
     emoji: '📻',
     holdEffect: {
@@ -276,53 +364,29 @@ const CARD_EFFECTS = {
       fn: () => ({ altitudeFlat: 10000, message: '📻 King of Clubs: Mission Control confirms! +10,000 ft' })
     }
   },
+
   'Q_clubs': {
     emoji: '🗺️',
-    holdEffect: {
-      desc: '🚀 +5,000 ft + blocks one ⚠️ penalty',
-      emoji: '🛡️',
-      fn: () => ({ altitudeFlat: 5000, blockPenalty: true, message: '🗺️ Queen of Clubs: Flight plan secured! +5,000 ft + penalty blocked' })
+    burnEffect: {
+      desc: '🔭 Reveals one additional next card suit for rest of game',
+      emoji: '🔭',
+      fn: () => ({ extraPeek: 1, message: '🗺️ Queen of Clubs: Extended scan! +1 card peek for rest of game' })
     }
   },
+
   'J_clubs': {
     emoji: '🧭',
     holdEffect: {
       desc: '🎲 Wildcard: +8,000 ft OR ✖️1.2x (whichever is higher)',
       emoji: '🎲',
-      fn: (gs) => {
-        // Calculated at launch time
-        return { wildcard: true, message: '🧭 Jack of Clubs: Navigation computed! Best path taken' };
-      }
+      fn: () => ({ wildcard: true, message: '🧭 Jack of Clubs: Navigation computed! Best path taken' })
     }
   },
-  '3_clubs': {
-    emoji: '🎁',
-    burnEffect: {
-      desc: '🔄 +1 redraw when burned',
-      emoji: '🔄',
-      fn: () => ({ redraws: 1, message: '🎁 3 of Clubs: Ground control assist! +1 Redraw' })
-    }
-  },
-  '2_clubs': {
-    emoji: '🎁',
-    burnEffect: {
-      desc: '🔄 +1 redraw when burned',
-      emoji: '🔄',
-      fn: () => ({ redraws: 1, message: '🎁 2 of Clubs: Comm check! +1 Redraw' })
-    }
-  },
-  '5_clubs': {
-    emoji: '🎁',
-    burnEffect: {
-      desc: '🔄 +1 redraw when burned',
-      emoji: '🔄',
-      fn: () => ({ redraws: 1, message: '🎁 5 of Clubs: Systems redundancy! +1 Redraw' })
-    }
-  },
+
   '8_clubs': {
     emoji: '🌐',
     holdEffect: {
-      desc: '✖️1.1x altitude per 2 clubs held',
+      desc: '✖️1.1x altitude per 2 ♣️ held',
       emoji: '✖️',
       fn: (gs) => {
         const clubCount = gs.heldSuitCount('clubs');
@@ -332,7 +396,46 @@ const CARD_EFFECTS = {
     }
   },
 
-  // --- JOKERS ---
+  '5_clubs': {
+    emoji: '🎁',
+    burnEffect: {
+      desc: '🔄 +1 redraw when burned',
+      emoji: '🔄',
+      fn: () => ({ redraws: 1, message: '🎁 5 of Clubs: Systems redundancy! +1 Redraw' })
+    }
+  },
+
+  '4_clubs': {
+    emoji: '🎁',
+    burnEffect: {
+      desc: '🔄 +1 redraw when burned',
+      emoji: '🔄',
+      fn: () => ({ redraws: 1, message: '🎁 4 of Clubs: Contingency protocol! +1 Redraw' })
+    }
+  },
+
+  '3_clubs': {
+    emoji: '🎁',
+    burnEffect: {
+      desc: '🔄 +1 redraw when burned',
+      emoji: '🔄',
+      fn: () => ({ redraws: 1, message: '🎁 3 of Clubs: Ground control assist! +1 Redraw' })
+    }
+  },
+
+  '2_clubs': {
+    emoji: '🎁',
+    burnEffect: {
+      desc: '🔄 +1 redraw when burned',
+      emoji: '🔄',
+      fn: () => ({ redraws: 1, message: '🎁 2 of Clubs: Comm check! +1 Redraw' })
+    }
+  },
+
+  // ============================================================
+  // JOKERS
+  // ============================================================
+
   'JOKER_red': {
     emoji: '🃏',
     suit: 'joker',
@@ -342,6 +445,7 @@ const CARD_EFFECTS = {
       fn: () => ({ altitudeFlat: 50000, message: '🃏 RED JOKER: ALL SYSTEMS GO! +50,000 ft' })
     }
   },
+
   'JOKER_black': {
     emoji: '🃏',
     suit: 'joker',
@@ -357,14 +461,7 @@ const CARD_EFFECTS = {
       }
     }
   },
-
-  // --- NEGATIVE INTERACTIONS (applied at launch if conditions met) ---
-  // Stored separately, checked globally at launch
 };
-
-// Suit conflict: 3+ mixed red/black reduces multipliers
-// Engine stress: burning 4+ cards without a Hearts stabilizer caps ceiling
-// These are checked in game.js at launch time
 
 function buildDeck() {
   const cards = [];
@@ -373,13 +470,15 @@ function buildDeck() {
     for (const rank of RANKS) {
       const id = `${rank}_${suit}`;
       const baseEffect = CARD_EFFECTS[id] || {};
+      const burnValue = baseEffect.burnValue ||
+        (suit === 'diamonds' ? DIAMOND_BURN_VALUES[rank] : BURN_VALUES[rank]);
       cards.push({
         id,
         rank,
         suit,
         suitSymbol: SUITS[suit].symbol,
         suitEmoji: SUITS[suit].emoji,
-        burnValue: baseEffect.burnValue || BURN_VALUES[rank],
+        burnValue,
         holdEffect: baseEffect.holdEffect || null,
         burnEffect: baseEffect.burnEffect || null,
         emoji: baseEffect.emoji || '🂠',
@@ -388,33 +487,20 @@ function buildDeck() {
     }
   }
 
-  // Add jokers
   cards.push({
-    id: 'JOKER_red',
-    rank: 'JOKER',
-    suit: 'joker',
-    suitSymbol: '🃏',
-    suitEmoji: '🔴',
-    burnValue: 5,
+    id: 'JOKER_red', rank: 'JOKER', suit: 'joker',
+    suitSymbol: '🃏', suitEmoji: '🔴', burnValue: 5,
     holdEffect: CARD_EFFECTS['JOKER_red'].holdEffect,
-    burnEffect: null,
-    emoji: '🃏',
-    isNegative: false,
+    burnEffect: null, emoji: '🃏', isNegative: false,
   });
   cards.push({
-    id: 'JOKER_black',
-    rank: 'JOKER',
-    suit: 'joker',
-    suitSymbol: '🃏',
-    suitEmoji: '⚫',
-    burnValue: 5,
+    id: 'JOKER_black', rank: 'JOKER', suit: 'joker',
+    suitSymbol: '🃏', suitEmoji: '⚫', burnValue: 5,
     holdEffect: CARD_EFFECTS['JOKER_black'].holdEffect,
-    burnEffect: null,
-    emoji: '🃏',
-    isNegative: false,
+    burnEffect: null, emoji: '🃏', isNegative: false,
   });
 
-  return cards; // 54 cards
+  return cards;
 }
 
 function getDailyDeck() {
@@ -429,4 +515,4 @@ function getDailyDateString() {
   return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
 }
 
-export { getDailyDeck, getDailyDateString, SUITS, RANKS, CARD_EFFECTS };
+export { getDailyDeck, getDailyDateString, SUITS, RANKS, CARD_EFFECTS, DIAMOND_BURN_VALUES };

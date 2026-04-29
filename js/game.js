@@ -31,6 +31,7 @@ class GameState {
 
     this.redraws = BASE_REDRAWS;
     this.redrawsUsed = 0;
+    this.extraPeeks = 0; // extra cards revealed in peek strip
 
     this.launchResult = null; // { altitude, tier, log }
 
@@ -101,6 +102,10 @@ class GameState {
         if (result.redraws) {
           this.redraws += result.redraws;
           this.emit('redrawBonus', { card, bonus: result.redraws, message: result.message });
+        }
+        if (result.extraPeek) {
+          this.extraPeeks += result.extraPeek;
+          this.emit('redrawBonus', { card, bonus: 0, message: result.message });
         }
       }
     }

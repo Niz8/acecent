@@ -1,7 +1,7 @@
 // config.js — Project Acecent
 // Version and readme content live here
 
-const VERSION = '0.3.0-alpha';
+const VERSION = '0.4.0-alpha';
 
 const README = {
   version: VERSION,
@@ -46,59 +46,63 @@ Orbital requires near-perfect play. Most players land in Stratosphere or Mesosph
       suits: [
         {
           name: 'Spades ♠️',
-          theme: 'Thrust — raw power and fuel bonuses',
+          theme: 'Thrust — raw power, spade combos, fuel multipliers',
           color: '#3a7bd5',
           cards: [
             { card: 'A♠️', type: 'HOLD', desc: '1.5x final altitude — only if you hold no pairs' },
             { card: 'K♠️', type: 'HOLD', desc: '2x fuel value from all burned Spades' },
             { card: 'Q♠️', type: 'HOLD', desc: '+15,000 ft if you hold 3 or more Spades' },
             { card: 'J♠️', type: 'HOLD', desc: '+8,000 ft flat' },
-            { card: '7♠️', type: 'HOLD', desc: '+5,000 ft if you hold any Diamond' },
-            { card: '2♠️', type: 'BURN', desc: 'Burns for triple its face value in fuel' },
+            { card: '10♠️', type: 'HOLD', desc: '1.5x fuel from all burned Spades — stacks with King' },
+            { card: '7♠️', type: 'HOLD', desc: '+5,000 ft if you hold any other Spade' },
+            { card: '2♠️', type: 'BURN', desc: 'Burns for 3x its face value in fuel' },
           ]
         },
         {
           name: 'Hearts ♥️',
-          theme: 'Life Support — crew protection and penalty blocking',
+          theme: 'Life Support — penalty blocking and crew synergy',
           color: '#e8334a',
           cards: [
             { card: 'A♥️', type: 'HOLD', desc: 'Blocks one penalty + 10,000 ft' },
-            { card: 'K♥️', type: 'HOLD', desc: 'Blocks all suit conflict penalties' },
-            { card: 'Q♥️', type: 'HOLD', desc: 'Negates one penalty card in hand' },
-            { card: 'J♥️', type: 'HOLD', desc: '+6,000 ft if you hold no Spades' },
+            { card: 'K♥️', type: 'HOLD', desc: 'Blocks ALL suit conflict penalties' },
+            { card: 'Q♥️', type: 'HOLD', desc: 'Blocks one penalty' },
+            { card: 'J♥️', type: 'HOLD', desc: 'Blocks one penalty + 4,000 ft' },
             { card: '9♥️', type: 'HOLD', desc: '+3,000 ft per Heart held including this one' },
-            { card: '2♥️', type: 'BURN', desc: '+1 redraw when burned' },
-            { card: '3♥️', type: 'BURN', desc: '+1 redraw when burned' },
+            { card: '6♥️', type: 'HOLD', desc: 'Blocks one penalty' },
+            { card: '5♥️', type: 'HOLD', desc: 'Blocks one penalty' },
             { card: '4♥️', type: 'BURN', desc: '+1 redraw when burned' },
+            { card: '3♥️', type: 'BURN', desc: '+1 redraw when burned' },
+            { card: '2♥️', type: 'BURN', desc: '+1 redraw when burned' },
           ]
         },
         {
           name: 'Diamonds ♦️',
-          theme: 'Engineering — multipliers and efficiency',
+          theme: 'Engineering — synergy and pairs. All Diamonds burn for half value.',
           color: '#e8334a',
           cards: [
-            { card: 'A♦️', type: 'HOLD', desc: '1.5x final altitude — only if you hold no pairs' },
-            { card: 'K♦️', type: 'HOLD', desc: '1.3x final altitude' },
-            { card: 'Q♦️', type: 'HOLD', desc: '1.2x fuel efficiency on all burned cards' },
-            { card: 'J♦️', type: 'HOLD', desc: '+5,000 ft if you hold 2 or more Diamonds' },
+            { card: 'A♦️', type: 'HOLD', desc: '+30,000 ft if you hold 3 of a kind OR 4 of the same suit' },
+            { card: 'K♦️', type: 'HOLD', desc: '+20,000 ft — only if you burned zero Diamonds all game' },
+            { card: 'Q♦️', type: 'HOLD', desc: '+8,000 ft if you hold a pair' },
+            { card: 'J♦️', type: 'HOLD', desc: '+6,000 ft if you hold no Spades' },
             { card: '10♦️', type: 'HOLD', desc: '+4,000 ft per unique suit in your held hand' },
-            { card: '2♦️', type: 'BURN', desc: '+1 redraw when burned' },
-            { card: '3♦️', type: 'BURN', desc: '+1 redraw when burned' },
+            { card: '3♦️', type: 'HOLD', desc: '+5,000 ft if you hold a pair' },
+            { card: '2♦️', type: 'HOLD', desc: '+3,000 ft if you hold a pair' },
           ]
         },
         {
           name: 'Clubs ♣️',
-          theme: 'Mission Control — wildcards and redraws',
+          theme: 'Mission Control — redraws, burn bonuses, extended peek',
           color: '#3a7bd5',
           cards: [
-            { card: 'A♣️', type: 'BURN', desc: '+2 redraws when burned — the rarest redraw card' },
+            { card: 'A♣️', type: 'BURN', desc: '+2 redraws when burned' },
             { card: 'K♣️', type: 'HOLD', desc: '+10,000 ft flat' },
-            { card: 'Q♣️', type: 'HOLD', desc: '+5,000 ft and blocks one penalty' },
+            { card: 'Q♣️', type: 'BURN', desc: 'Reveals one additional next card suit for the rest of the game' },
             { card: 'J♣️', type: 'HOLD', desc: 'Wildcard: takes whichever is better between +8,000 ft or 1.2x altitude' },
             { card: '8♣️', type: 'HOLD', desc: '1.1x altitude multiplier per 2 Clubs held' },
-            { card: '2♣️', type: 'BURN', desc: '+1 redraw when burned' },
-            { card: '3♣️', type: 'BURN', desc: '+1 redraw when burned' },
             { card: '5♣️', type: 'BURN', desc: '+1 redraw when burned' },
+            { card: '4♣️', type: 'BURN', desc: '+1 redraw when burned' },
+            { card: '3♣️', type: 'BURN', desc: '+1 redraw when burned' },
+            { card: '2♣️', type: 'BURN', desc: '+1 redraw when burned' },
           ]
         },
         {
@@ -117,7 +121,7 @@ Orbital requires near-perfect play. Most players land in Stratosphere or Mesosph
       title: '⚠️ Penalties',
       content: `Two global penalties are checked at launch:
 
-ENGINE STRESS: If you burned 4 or more cards and hold no Hearts life support card, your final altitude is reduced to 85%. Hold a Heart face card to protect against this.
+ENGINE STRESS: If you burned 4 or more cards and hold no Hearts life support card, your final altitude is reduced to 85%. Hold any Heart with a shield effect to protect against this.
 
 SIGNAL INTERFERENCE: If you hold 2 or more red cards AND 2 or more black cards, your altitude is reduced to 90%. The King of Hearts blocks this specifically.
 
@@ -127,6 +131,26 @@ Penalties are applied after multipliers. Penalty-blocking cards are processed fi
       id: 'patchnotes',
       title: '📋 Patch Notes',
       patches: [
+        {
+          version: '0.4.0-alpha',
+          date: 'April 2026',
+          notes: [
+            'Major card rework across all suits',
+            'Diamonds: all burn for half value — holding is the strategy',
+            'Diamonds: 2 and 3 now HOLD pair bonuses, Queen reworked to pair bonus',
+            'Diamonds: King gives +20,000 ft but only if zero diamonds burned',
+            'Diamonds: Ace gives +30,000 ft for 3 of a kind or 4 of same suit',
+            'Diamonds: Jack reworked — +6,000 ft if no spades held',
+            'Spades: 10 now HOLD 1.5x spade fuel (stacks multiplicatively with King)',
+            'Spades: 7 reworked — +5,000 ft if you hold any other spade',
+            'Clubs: Queen reworked — BURN to gain permanent extra peek for rest of game',
+            'Clubs: 4 now gives +1 redraw on burn',
+            'Hearts: Jack reworked — blocks one penalty + 4,000 ft',
+            'Hearts: 5 and 6 now block one penalty each',
+            'Multiplicative stacking — holding multiple synergy cards compounds correctly',
+            'Firestore security rules locked down',
+          ]
+        },
         {
           version: '0.3.0-alpha',
           date: 'April 2026',

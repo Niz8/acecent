@@ -182,9 +182,6 @@ function renderHand(container, gameState, onRedraw, onLaunch) {
   // Build penalty status
   const penaltyStatus = getPenaltyStatus(gs);
 
-  // Next card peek
-  const nextCard = gs.deck[gs.drawIndex] || null;
-
   container.innerHTML = `
     <div class="screen hand-screen">
 
@@ -253,14 +250,16 @@ function renderHand(container, gameState, onRedraw, onLaunch) {
     strip.appendChild(chip);
   });
 
-  // Next card peek chip
-  if (nextCard) {
+  // Next card peek — base 1 + any extraPeeks from Q_clubs burns
+  const peekCount = 1 + (gs.extraPeeks || 0);
+  for (let p = 0; p < peekCount; p++) {
+    const peekedCard = gs.deck[gs.drawIndex + p] || null;
+    if (!peekedCard) break;
     const peekChip = document.createElement('div');
     peekChip.className = 'hand-chip chip-peek';
-    const sym = getSuitSymbol(nextCard.suit);
-    const col = getSuitColor(nextCard.suit);
-    peekChip.innerHTML = `<span class="chip-peek-label">NEXT</span><span style="color:${col}">${sym}</span>`;
-    peekChip.title = 'Next card in deck (suit only)';
+    const sym = getSuitSymbol(peekedCard.suit);
+    const col = getSuitColor(peekedCard.suit);
+    peekChip.innerHTML = `<span class="chip-peek-label">${p === 0 ? 'NEXT' : 'NEXT+' + p}</span><span style="color:${col}">${sym}</span>`;
     strip.appendChild(peekChip);
   }
 
@@ -308,7 +307,8 @@ function getPenaltyStatus(gs) {
   const burnedCount = gs.burnedCards.length;
 
   const hasHeartBlock = heldCards.some(c =>
-    c.id === 'K_hearts' || c.id === 'Q_hearts' || c.id === 'A_hearts' || c.id === 'Q_clubs'
+    c.id === 'K_hearts' || c.id === 'Q_hearts' || c.id === 'A_hearts' ||
+    c.id === 'J_hearts' || c.id === '5_hearts' || c.id === '6_hearts'
   );
   const hasKingHeartsBlock = heldCards.some(c => c.id === 'K_hearts');
 
