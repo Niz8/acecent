@@ -79,8 +79,8 @@ function checkEnginePenalties(burnedCards, heldCards, log) {
   );
 
   if (burnedCards.length >= 4 && !hasHeartsPenaltyBlock) {
-    penalties.push({ type: 'engineStress', altitudeMult: 0.85 });
-    log.push('⚠️ ENGINE STRESS: 4+ cards burned without Life Support! ✖️0.85x altitude');
+    penalties.push({ type: 'engineStress', altitudeMult: 0.75 });
+    log.push('⚠️ ENGINE STRESS: 4+ cards burned without Life Support! ✖️0.75x altitude');
   }
 
   // Red/black conflict: 3+ cards of mixed red/black suits
@@ -107,18 +107,14 @@ function processHeldEffects(heldCards, gs) {
   let blockPenaltyCount = 0;
   let blockSuitPenalty = false;
 
-  // Process in a defined order: shields first, then bonuses, then multipliers
+  // Priority: shields (0) → flats (1) → multipliers (2)
+  // Use card IDs to determine shield priority safely without calling fn
+  const SHIELD_IDS = new Set(['K_hearts', 'Q_hearts', 'A_hearts', 'J_hearts', '5_hearts', '6_hearts']);
+
   const ordered = [...heldCards].sort((a, b) => {
-    const priority = (card) => {
-      if (card.id === 'K_hearts' || card.id === 'Q_hearts' || card.id === 'A_hearts') return 0;
-      if (card.holdEffect?.fn) {
-        const result = card.holdEffect.fn(gs);
-        if (result.altitudeMult) return 2;
-        if (result.blockPenalty || result.blockSuitPenalty) return 0;
-      }
-      return 1;
-    };
-    return priority(a) - priority(b);
+    const pa = SHIELD_IDS.has(a.id) ? 0 : 1;
+    const pb = SHIELD_IDS.has(b.id) ? 0 : 1;
+    return pa - pb;
   });
 
   for (const card of ordered) {
@@ -126,23 +122,10 @@ function processHeldEffects(heldCards, gs) {
 
     const result = card.holdEffect.fn(gs);
 
-    if (result.altitudeFlat) {
-      flatBonus += result.altitudeFlat;
-    }
-    if (result.altitudeMult) {
-      multipliers.push(result.altitudeMult);
-    }
-    if (result.blockPenalty) {
-      blockPenaltyCount++;
-    }
-    if (result.blockSuitPenalty) {
-      blockSuitPenalty = true;
-    }
-    if (result.wildcard) {
-      // Jack of Clubs: computed after we know base
-      // Store for later resolution
-      result._wildcard = true;
-    }
+    if (result.altitudeFlat) flatBonus += result.altitudeFlat;
+    if (result.altitudeMult) multipliers.push(result.altitudeMult);
+    if (result.blockPenalty) blockPenaltyCount++;
+    if (result.blockSuitPenalty) blockSuitPenalty = true;
 
     log.push(result.message);
   }

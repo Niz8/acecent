@@ -1,7 +1,7 @@
 // config.js — Project Acecent
 // Version and readme content live here
 
-const VERSION = '0.4.0-alpha';
+const VERSION = '0.5.0-alpha';
 
 const README = {
   version: VERSION,
@@ -49,13 +49,13 @@ Orbital requires near-perfect play. Most players land in Stratosphere or Mesosph
           theme: 'Thrust — raw power, spade combos, fuel multipliers',
           color: '#3a7bd5',
           cards: [
-            { card: 'A♠️', type: 'HOLD', desc: '1.5x final altitude — only if you hold no pairs' },
-            { card: 'K♠️', type: 'HOLD', desc: '2x fuel value from all burned Spades' },
-            { card: 'Q♠️', type: 'HOLD', desc: '+15,000 ft if you hold 3 or more Spades' },
-            { card: 'J♠️', type: 'HOLD', desc: '+8,000 ft flat' },
-            { card: '10♠️', type: 'HOLD', desc: '1.5x fuel from all burned Spades — stacks with King' },
+            { card: 'A♠️', type: 'HOLD', desc: '✖️1.5x final altitude — only if you hold no pairs' },
+            { card: 'K♠️', type: 'HOLD', desc: '✖️2x fuel value from all burned Spades' },
+            { card: 'Q♠️', type: 'HOLD', desc: '✖️1.3x final altitude if you hold 3+ Spades' },
+            { card: 'J♠️', type: 'HOLD', desc: '✖️1.15x final altitude' },
+            { card: '10♠️', type: 'HOLD', desc: '✖️1.5x fuel from all burned Spades — stacks with King' },
             { card: '7♠️', type: 'HOLD', desc: '+5,000 ft if you hold any other Spade' },
-            { card: '2♠️', type: 'BURN', desc: 'Burns for 3x its face value in fuel' },
+            { card: '2♠️', type: 'BURN', desc: 'Burns for 4x its face value in fuel' },
           ]
         },
         {
@@ -63,11 +63,11 @@ Orbital requires near-perfect play. Most players land in Stratosphere or Mesosph
           theme: 'Life Support — penalty blocking and crew synergy',
           color: '#e8334a',
           cards: [
-            { card: 'A♥️', type: 'HOLD', desc: 'Blocks one penalty + 10,000 ft' },
+            { card: 'A♥️', type: 'HOLD', desc: 'Blocks one penalty + ✖️1.2x altitude' },
             { card: 'K♥️', type: 'HOLD', desc: 'Blocks ALL suit conflict penalties' },
             { card: 'Q♥️', type: 'HOLD', desc: 'Blocks one penalty' },
-            { card: 'J♥️', type: 'HOLD', desc: 'Blocks one penalty + 4,000 ft' },
-            { card: '9♥️', type: 'HOLD', desc: '+3,000 ft per Heart held including this one' },
+            { card: 'J♥️', type: 'HOLD', desc: 'Blocks one penalty + ✖️1.1x altitude' },
+            { card: '9♥️', type: 'HOLD', desc: '✖️1.1x altitude per Heart held including this one' },
             { card: '6♥️', type: 'HOLD', desc: 'Blocks one penalty' },
             { card: '5♥️', type: 'HOLD', desc: 'Blocks one penalty' },
             { card: '4♥️', type: 'BURN', desc: '+1 redraw when burned' },
@@ -81,12 +81,12 @@ Orbital requires near-perfect play. Most players land in Stratosphere or Mesosph
           color: '#e8334a',
           cards: [
             { card: 'A♦️', type: 'HOLD', desc: '+30,000 ft if you hold 3 of a kind OR 4 of the same suit' },
-            { card: 'K♦️', type: 'HOLD', desc: '+20,000 ft — only if you burned zero Diamonds all game' },
-            { card: 'Q♦️', type: 'HOLD', desc: '+8,000 ft if you hold a pair' },
-            { card: 'J♦️', type: 'HOLD', desc: '+6,000 ft if you hold no Spades' },
-            { card: '10♦️', type: 'HOLD', desc: '+4,000 ft per unique suit in your held hand' },
-            { card: '3♦️', type: 'HOLD', desc: '+5,000 ft if you hold a pair' },
-            { card: '2♦️', type: 'HOLD', desc: '+3,000 ft if you hold a pair' },
+            { card: 'K♦️', type: 'HOLD', desc: '✖️1.4x altitude — only if you burned zero Diamonds all game' },
+            { card: 'Q♦️', type: 'HOLD', desc: '✖️1.2x altitude if you hold a pair' },
+            { card: 'J♦️', type: 'HOLD', desc: '✖️1.15x altitude if you hold no Spades' },
+            { card: '10♦️', type: 'HOLD', desc: '✖️1.1x altitude per unique suit in your held hand' },
+            { card: '3♦️', type: 'HOLD', desc: '+8,000 ft if you hold a pair' },
+            { card: '2♦️', type: 'HOLD', desc: '+5,000 ft if you hold a pair' },
           ]
         },
         {
@@ -95,10 +95,10 @@ Orbital requires near-perfect play. Most players land in Stratosphere or Mesosph
           color: '#3a7bd5',
           cards: [
             { card: 'A♣️', type: 'BURN', desc: '+2 redraws when burned' },
-            { card: 'K♣️', type: 'HOLD', desc: '+10,000 ft flat' },
+            { card: 'K♣️', type: 'HOLD', desc: '✖️1.2x final altitude' },
             { card: 'Q♣️', type: 'BURN', desc: 'Reveals one additional next card suit for the rest of the game' },
-            { card: 'J♣️', type: 'HOLD', desc: 'Wildcard: takes whichever is better between +8,000 ft or 1.2x altitude' },
-            { card: '8♣️', type: 'HOLD', desc: '1.1x altitude multiplier per 2 Clubs held' },
+            { card: 'J♣️', type: 'HOLD', desc: '✖️1.25x final altitude' },
+            { card: '8♣️', type: 'HOLD', desc: '✖️1.15x altitude per 2 Clubs held' },
             { card: '5♣️', type: 'BURN', desc: '+1 redraw when burned' },
             { card: '4♣️', type: 'BURN', desc: '+1 redraw when burned' },
             { card: '3♣️', type: 'BURN', desc: '+1 redraw when burned' },
@@ -131,6 +131,30 @@ Penalties are applied after multipliers. Penalty-blocking cards are processed fi
       id: 'patchnotes',
       title: '📋 Patch Notes',
       patches: [
+        {
+          version: '0.5.0-alpha',
+          date: 'April 2026',
+          notes: [
+            'Major balance rework — holding cards now meaningfully beats burning everything',
+            'All face card hold effects converted from flat bonuses to multipliers',
+            'Q♠️: now ✖️1.3x if 3+ spades (was +15,000 ft)',
+            'J♠️: now ✖️1.15x flat (was +8,000 ft)',
+            'K♦️: now ✖️1.4x if zero diamonds burned (was +20,000 ft)',
+            'Q♦️: now ✖️1.2x if pair held (was +8,000 ft)',
+            'J♦️: now ✖️1.15x if no spades (was +6,000 ft)',
+            '10♦️: now ✖️1.1x per unique suit (was +4,000 ft per suit)',
+            '9♥️: now ✖️1.1x per heart held (was +3,000 ft per heart)',
+            'A♥️: now block + ✖️1.2x (was block + +10,000 ft)',
+            'J♥️: now block + ✖️1.1x (was block + +4,000 ft)',
+            'K♣️: now ✖️1.2x flat (was +10,000 ft)',
+            'J♣️: now ✖️1.25x flat — wildcard removed, always fires',
+            '8♣️: bumped to ✖️1.15x per 2 clubs (was ✖️1.1x)',
+            '2♦️ and 3♦️ pair bonuses bumped to +5,000 and +8,000 ft',
+            '2♠️ burn value bumped to 8 (was 6)',
+            'Engine stress penalty increased to ✖️0.75x (was ✖️0.85x)',
+            'Fixed processHeldEffects priority sort bug',
+          ]
+        },
         {
           version: '0.4.0-alpha',
           date: 'April 2026',

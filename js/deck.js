@@ -60,10 +60,6 @@ const DIAMOND_BURN_VALUES = {
 
 const CARD_EFFECTS = {
 
-  // ============================================================
-  // SPADES — Thrust: raw power, spade combos, fuel multipliers
-  // ============================================================
-
   'A_spades': {
     emoji: '🚀',
     holdEffect: {
@@ -72,7 +68,7 @@ const CARD_EFFECTS = {
       condition: (gs) => !gs.handHasPair,
       fn: (gs) => gs.handHasPair
         ? { message: '❌ Ace of Spades: pair detected, bonus lost' }
-        : { altitudeMult: 1.5, message: '🚀 Ace of Spades: NO PAIRS — 1.5x THRUST!' }
+        : { altitudeMult: 1.5, message: '🚀 Ace of Spades: NO PAIRS — ✖️1.5x THRUST!' }
     }
   },
 
@@ -88,11 +84,11 @@ const CARD_EFFECTS = {
   'Q_spades': {
     emoji: '⚡',
     holdEffect: {
-      desc: '🚀 +15,000 ft if you hold 3+ ♠️',
-      emoji: '🚀',
+      desc: '✖️1.3x final altitude if you hold 3+ ♠️',
+      emoji: '✖️',
       condition: (gs) => gs.heldSuitCount('spades') >= 3,
       fn: (gs) => gs.heldSuitCount('spades') >= 3
-        ? { altitudeFlat: 15000, message: '⚡ Queen of Spades: Full Thrust Array! +15,000 ft' }
+        ? { altitudeMult: 1.3, message: '⚡ Queen of Spades: Full Thrust Array! ✖️1.3x altitude' }
         : { message: '⚡ Queen of Spades: Need 3 spades — no bonus' }
     }
   },
@@ -100,9 +96,9 @@ const CARD_EFFECTS = {
   'J_spades': {
     emoji: '💥',
     holdEffect: {
-      desc: '🚀 +8,000 ft flat',
-      emoji: '🚀',
-      fn: () => ({ altitudeFlat: 8000, message: '💥 Jack of Spades: Booster ignition! +8,000 ft' })
+      desc: '✖️1.15x final altitude',
+      emoji: '✖️',
+      fn: () => ({ altitudeMult: 1.15, message: '💥 Jack of Spades: Booster ignition! ✖️1.15x altitude' })
     }
   },
 
@@ -111,7 +107,7 @@ const CARD_EFFECTS = {
     holdEffect: {
       desc: '✖️1.5x fuel from all burned ♠️',
       emoji: '✖️',
-      fn: () => ({ fuelMult: 1.5, fuelMultSuit: 'spades', message: '🔥 10 of Spades: Auxiliary thrusters! Spade fuel x1.5' })
+      fn: () => ({ fuelMult: 1.5, fuelMultSuit: 'spades', message: '🔥 10 of Spades: Auxiliary thrusters! Spade fuel ✖️1.5x' })
     }
   },
 
@@ -128,12 +124,12 @@ const CARD_EFFECTS = {
   },
 
   '2_spades': {
-    burnValue: 6,
+    burnValue: 8,
     emoji: '⛽',
     burnEffect: {
-      desc: '🔥 Burns for 3x face value',
+      desc: '🔥 Burns for 4x face value',
       emoji: '🔥',
-      fn: () => ({ fuelBonus: 6, message: '⛽ 2 of Spades: High-octane fuel! Extra burn' })
+      fn: () => ({ message: '⛽ 2 of Spades: High-octane fuel! Boosted burn' })
     }
   },
 
@@ -144,9 +140,9 @@ const CARD_EFFECTS = {
   'A_hearts': {
     emoji: '💗',
     holdEffect: {
-      desc: '🛡️ Blocks one penalty + 🚀 +10,000 ft',
+      desc: '🛡️ Blocks one penalty + ✖️1.2x altitude',
       emoji: '🛡️',
-      fn: () => ({ blockPenalty: true, altitudeFlat: 10000, message: '💗 Ace of Hearts: Crew protected! Penalty blocked + 10,000 ft' })
+      fn: () => ({ blockPenalty: true, altitudeMult: 1.2, message: '💗 Ace of Hearts: Crew protected! Penalty blocked + ✖️1.2x altitude' })
     }
   },
 
@@ -171,20 +167,21 @@ const CARD_EFFECTS = {
   'J_hearts': {
     emoji: '🩺',
     holdEffect: {
-      desc: '🛡️ Blocks one penalty + 🚀 +4,000 ft',
+      desc: '🛡️ Blocks one penalty + ✖️1.1x altitude',
       emoji: '🛡️',
-      fn: () => ({ blockPenalty: true, altitudeFlat: 4000, message: '🩺 Jack of Hearts: Medic on deck! Penalty blocked + 4,000 ft' })
+      fn: () => ({ blockPenalty: true, altitudeMult: 1.1, message: '🩺 Jack of Hearts: Medic on deck! Penalty blocked + ✖️1.1x altitude' })
     }
   },
 
   '9_hearts': {
     emoji: '💞',
     holdEffect: {
-      desc: '🚀 +3,000 ft per ♥️ held (including this)',
-      emoji: '🚀',
+      desc: '✖️1.1x altitude per ♥️ held (including this)',
+      emoji: '✖️',
       fn: (gs) => {
         const count = gs.heldSuitCount('hearts');
-        return { altitudeFlat: count * 3000, message: `💞 9 of Hearts: Crew synergy! +${(count * 3000).toLocaleString()} ft` };
+        const mult = parseFloat((1 + count * 0.1).toFixed(2));
+        return { altitudeMult: mult, message: `💞 9 of Hearts: Crew synergy! ✖️${mult}x altitude (${count} hearts)` };
       }
     }
   },
@@ -274,11 +271,11 @@ const CARD_EFFECTS = {
   'K_diamonds': {
     emoji: '🔬',
     holdEffect: {
-      desc: '🚀 +20,000 ft — only if you burned zero ♦️',
-      emoji: '🚀',
+      desc: '✖️1.4x altitude — only if you burned zero ♦️',
+      emoji: '✖️',
       condition: (gs) => gs.burnedSuitCount('diamonds') === 0,
       fn: (gs) => gs.burnedSuitCount('diamonds') === 0
-        ? { altitudeFlat: 20000, message: '🔬 King of Diamonds: Pure engineering! +20,000 ft' }
+        ? { altitudeMult: 1.4, message: '🔬 King of Diamonds: Pure engineering! ✖️1.4x altitude' }
         : { message: '🔬 King of Diamonds: Burned diamonds detected — bonus lost' }
     }
   },
@@ -286,11 +283,11 @@ const CARD_EFFECTS = {
   'Q_diamonds': {
     emoji: '⚙️',
     holdEffect: {
-      desc: '🚀 +8,000 ft if you hold a pair',
-      emoji: '🚀',
+      desc: '✖️1.2x altitude if you hold a pair',
+      emoji: '✖️',
       condition: (gs) => gs.handHasPair,
       fn: (gs) => gs.handHasPair
-        ? { altitudeFlat: 8000, message: '⚙️ Queen of Diamonds: Matched components! +8,000 ft' }
+        ? { altitudeMult: 1.2, message: '⚙️ Queen of Diamonds: Matched components! ✖️1.2x altitude' }
         : { message: '⚙️ Queen of Diamonds: No pair — no bonus' }
     }
   },
@@ -298,11 +295,11 @@ const CARD_EFFECTS = {
   'J_diamonds': {
     emoji: '🛠️',
     holdEffect: {
-      desc: '🚀 +6,000 ft if no ♠️ in hand',
-      emoji: '🚀',
+      desc: '✖️1.15x altitude if you hold no ♠️',
+      emoji: '✖️',
       condition: (gs) => gs.heldSuitCount('spades') === 0,
       fn: (gs) => gs.heldSuitCount('spades') === 0
-        ? { altitudeFlat: 6000, message: '🛠️ Jack of Diamonds: Clean integration! +6,000 ft' }
+        ? { altitudeMult: 1.15, message: '🛠️ Jack of Diamonds: Clean integration! ✖️1.15x altitude' }
         : { message: '🛠️ Jack of Diamonds: Spade interference — no bonus' }
     }
   },
@@ -310,11 +307,12 @@ const CARD_EFFECTS = {
   '10_diamonds': {
     emoji: '📡',
     holdEffect: {
-      desc: '🚀 +4,000 ft per unique suit in hand',
-      emoji: '🚀',
+      desc: '✖️1.1x per unique suit in hand',
+      emoji: '✖️',
       fn: (gs) => {
         const suits = new Set(gs.heldCards.map(c => c.suit));
-        return { altitudeFlat: suits.size * 4000, message: `📡 10 of Diamonds: Multi-system sync! +${(suits.size * 4000).toLocaleString()} ft` };
+        const mult = parseFloat((suits.size * 1.1).toFixed(2));
+        return { altitudeMult: mult, message: `📡 10 of Diamonds: Multi-system sync! ✖️${mult}x altitude (${suits.size} suits)` };
       }
     }
   },
@@ -322,11 +320,11 @@ const CARD_EFFECTS = {
   '3_diamonds': {
     emoji: '💎',
     holdEffect: {
-      desc: '🚀 +5,000 ft if you hold a pair',
+      desc: '🚀 +8,000 ft if you hold a pair',
       emoji: '🚀',
       condition: (gs) => gs.handHasPair,
       fn: (gs) => gs.handHasPair
-        ? { altitudeFlat: 5000, message: '💎 3 of Diamonds: Redundant systems! +5,000 ft' }
+        ? { altitudeFlat: 8000, message: '💎 3 of Diamonds: Redundant systems! +8,000 ft' }
         : { message: '💎 3 of Diamonds: No pair — no bonus' }
     }
   },
@@ -334,11 +332,11 @@ const CARD_EFFECTS = {
   '2_diamonds': {
     emoji: '💎',
     holdEffect: {
-      desc: '🚀 +3,000 ft if you hold a pair',
+      desc: '🚀 +5,000 ft if you hold a pair',
       emoji: '🚀',
       condition: (gs) => gs.handHasPair,
       fn: (gs) => gs.handHasPair
-        ? { altitudeFlat: 3000, message: '💎 2 of Diamonds: Dual calibration! +3,000 ft' }
+        ? { altitudeFlat: 5000, message: '💎 2 of Diamonds: Dual calibration! +5,000 ft' }
         : { message: '💎 2 of Diamonds: No pair — no bonus' }
     }
   },
@@ -359,9 +357,9 @@ const CARD_EFFECTS = {
   'K_clubs': {
     emoji: '📻',
     holdEffect: {
-      desc: '🚀 +10,000 ft flat',
-      emoji: '🚀',
-      fn: () => ({ altitudeFlat: 10000, message: '📻 King of Clubs: Mission Control confirms! +10,000 ft' })
+      desc: '✖️1.2x final altitude',
+      emoji: '✖️',
+      fn: () => ({ altitudeMult: 1.2, message: '📻 King of Clubs: Mission Control confirms! ✖️1.2x altitude' })
     }
   },
 
@@ -377,21 +375,21 @@ const CARD_EFFECTS = {
   'J_clubs': {
     emoji: '🧭',
     holdEffect: {
-      desc: '🎲 Wildcard: +8,000 ft OR ✖️1.2x (whichever is higher)',
-      emoji: '🎲',
-      fn: () => ({ wildcard: true, message: '🧭 Jack of Clubs: Navigation computed! Best path taken' })
+      desc: '✖️1.25x final altitude',
+      emoji: '✖️',
+      fn: () => ({ altitudeMult: 1.25, message: '🧭 Jack of Clubs: Optimal trajectory locked! ✖️1.25x altitude' })
     }
   },
 
   '8_clubs': {
     emoji: '🌐',
     holdEffect: {
-      desc: '✖️1.1x altitude per 2 ♣️ held',
+      desc: '✖️1.15x altitude per 2 ♣️ held',
       emoji: '✖️',
       fn: (gs) => {
         const clubCount = gs.heldSuitCount('clubs');
-        const mult = 1 + (Math.floor(clubCount / 2) * 0.1);
-        return { altitudeMult: mult, message: `🌐 8 of Clubs: Network effect! ✖️${mult.toFixed(1)}x altitude` };
+        const mult = parseFloat((1 + Math.floor(clubCount / 2) * 0.15).toFixed(2));
+        return { altitudeMult: mult, message: `🌐 8 of Clubs: Network effect! ✖️${mult}x altitude` };
       }
     }
   },
