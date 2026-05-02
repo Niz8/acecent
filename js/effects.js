@@ -1,7 +1,8 @@
 // effects.js — Project Acecent
-// Launch calculation engine: processes held cards, burned fuel, penalties
+// Launch calculation engine: fuel tank, poker hands, held effects
 
-const FUEL_PER_BURN_UNIT = 1000; // 1 burn value unit = 1000 ft base
+const FUEL_PER_BURN_UNIT = 1000;
+const BASE_TANK_SIZE = 3;
 
 // Altitude tiers
 const ALTITUDE_TIERS = [
@@ -18,14 +19,37 @@ function getTier(altitude) {
   return ALTITUDE_TIERS.find(t => altitude >= t.min && altitude <= t.max) || ALTITUDE_TIERS[0];
 }
 
-// Build a gameState context object for effect functions
+// Cards that add tank slots when held — non-diamond face cards
+// Computed dynamically from held hand
+function getTankSize(heldCards) {
+  let size = BASE_TANK_SIZE;
+  for (const card of heldCards) {
+    if (card.holdEffect) {
+      // We peek at the card's tank contribution via a lightweight check
+      // tankSlots is returned by holdEffect.fn but we need it before launch
+      // So we hardcode tank-contributing card IDs here
+      if (TANK_SLOT_CARDS[card.id]) {
+        size += TANK_SLOT_CARDS[card.id];
+      }
+    }
+  }
+  return size;
+}
+
+// Tank slot contributions by card ID
+const TANK_SLOT_CARDS = {
+  'A_spades': 1, 'K_spades': 1, 'Q_spades': 1, 'J_spades': 1,
+  'A_hearts': 2, 'K_hearts': 2,
+  'Q_hearts': 1, 'J_hearts': 1, '9_hearts': 1, '6_hearts': 1, '5_hearts': 1,
+  'K_clubs': 1, 'J_clubs': 1,
+};
+
+// Build gameState context for effect functions
 function buildGameStateContext(heldCards, burnedCards, rng) {
   const heldSuitCounts = {};
   for (const card of heldCards) {
     heldSuitCounts[card.suit] = (heldSuitCounts[card.suit] || 0) + 1;
   }
-
-  // Check for pairs in held hand
   const rankCounts = {};
   for (const card of heldCards) {
     rankCounts[card.rank] = (rankCounts[card.rank] || 0) + 1;
@@ -42,16 +66,28 @@ function buildGameStateContext(heldCards, burnedCards, rng) {
   };
 }
 
-// Calculate fuel from burned cards
-function calculateFuel(burnedCards, heldCards, gs) {
-  let fuel = 0;
-  const log = [];
+// Apply fuel tank — only top N burned cards count, oldest fall off
+function applyFuelTank(burnedCards, tankSize, log) {
+  if (burnedCards.length <= tankSize) {
+    log.push(`⛽ Tank: ${burnedCards.length}/${tankSize} slots used — all fuel counts`);
+    return burnedCards;
+  }
+  const overflow = burnedCards.length - tankSize;
+  const dropped = burnedCards.slice(0, overflow);
+  const kept = burnedCards.slice(overflow);
+  dropped.forEach(c => log.push(`💨 ${c.emoji} ${c.rank}${c.suitSymbol} overflowed tank — fuel lost`));
+  log.push(`⛽ Tank: ${kept.length}/${tankSize} slots — oldest ${overflow} card${overflow > 1 ? 's' : ''} dropped`);
+  return kept;
+}
 
-  // Spade fuel multipliers — multiplicative stacking
+// Calculate fuel from kept burned cards
+function calculateFuel(keptBurnedCards, heldCards, log) {
+  let fuel = 0;
+
   const hasKingSpades = heldCards.some(c => c.id === 'K_spades');
   const has10Spades = heldCards.some(c => c.id === '10_spades');
 
-  for (const card of burnedCards) {
+  for (const card of keptBurnedCards) {
     let cardFuel = card.burnValue * FUEL_PER_BURN_UNIT;
     let multiplier = 1;
 
@@ -67,70 +103,51 @@ function calculateFuel(burnedCards, heldCards, gs) {
     log.push(`⛽ ${card.emoji} ${card.rank}${card.suitSymbol} burned: +${finalFuel.toLocaleString()} ft${multNote}`);
   }
 
-  return { fuel, log };
+  return fuel;
 }
 
-// Engine stress penalty: burning 4+ cards without Hearts stabilizer
-function checkEnginePenalties(burnedCards, heldCards, log) {
-  const penalties = [];
-  const hasHeartsPenaltyBlock = heldCards.some(c =>
-    c.id === 'K_hearts' || c.id === 'Q_hearts' || c.id === 'A_hearts' ||
-    c.id === 'J_hearts' || c.id === '5_hearts' || c.id === '6_hearts'
-  );
+// Poker hand detection on held hand
+function detectPokerHand(heldCards) {
+  const ranks = heldCards.map(c => c.rank);
+  const suits = heldCards.map(c => c.suit);
 
-  if (burnedCards.length >= 4 && !hasHeartsPenaltyBlock) {
-    penalties.push({ type: 'engineStress', altitudeMult: 0.75 });
-    log.push('⚠️ ENGINE STRESS: 4+ cards burned without Life Support! ✖️0.75x altitude');
-  }
+  const rankOrder = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+  const rankCounts = {};
+  for (const r of ranks) rankCounts[r] = (rankCounts[r] || 0) + 1;
+  const counts = Object.values(rankCounts).sort((a, b) => b - a);
 
-  // Red/black conflict: 3+ cards of mixed red/black suits
-  const redSuits = ['hearts', 'diamonds'];
-  const blackSuits = ['spades', 'clubs'];
-  const redCount = heldCards.filter(c => redSuits.includes(c.suit)).length;
-  const blackCount = heldCards.filter(c => blackSuits.includes(c.suit)).length;
+  const isFlush = suits.every(s => s === suits[0]) && heldCards.length === 5;
+  const rankIndices = ranks.map(r => rankOrder.indexOf(r)).sort((a, b) => a - b);
+  const isStraight = heldCards.length === 5 &&
+    rankIndices.every((v, i) => i === 0 || v === rankIndices[i - 1] + 1) &&
+    new Set(ranks).size === 5;
 
-  const hasConflictBlock = heldCards.some(c => c.id === 'K_hearts');
-
-  if (redCount >= 2 && blackCount >= 2 && !hasConflictBlock) {
-    penalties.push({ type: 'suitConflict', altitudeMult: 0.9 });
-    log.push('⚠️ SIGNAL INTERFERENCE: Mixed suit conflict! ✖️0.9x altitude');
-  }
-
-  return penalties;
+  if (isFlush && isStraight) return { name: 'Straight Flush', emoji: '🌟', bonus: 400000 };
+  if (counts[0] === 4) return { name: 'Four of a Kind', emoji: '💫', bonus: 200000 };
+  if (counts[0] === 3 && counts[1] === 2) return { name: 'Full House', emoji: '🏠', bonus: 80000 };
+  if (isFlush) return { name: 'Flush', emoji: '♻️', bonus: 150000 };
+  if (isStraight) return { name: 'Straight', emoji: '📈', bonus: 100000 };
+  if (counts[0] === 3) return { name: 'Three of a Kind', emoji: '🎯', bonus: 50000 };
+  if (counts[0] === 2 && counts[1] === 2) return { name: 'Two Pair', emoji: '👯', bonus: 25000 };
+  if (counts[0] === 2) return { name: 'One Pair', emoji: '✌️', bonus: 10000 };
+  return null;
 }
 
-// Process all held card effects in order
+// Process all held card effects
 function processHeldEffects(heldCards, gs) {
   const log = [];
   let flatBonus = 0;
   let multipliers = [];
-  let blockPenaltyCount = 0;
-  let blockSuitPenalty = false;
 
-  // Priority: shields (0) → flats (1) → multipliers (2)
-  // Use card IDs to determine shield priority safely without calling fn
-  const SHIELD_IDS = new Set(['K_hearts', 'Q_hearts', 'A_hearts', 'J_hearts', '5_hearts', '6_hearts']);
-
-  const ordered = [...heldCards].sort((a, b) => {
-    const pa = SHIELD_IDS.has(a.id) ? 0 : 1;
-    const pb = SHIELD_IDS.has(b.id) ? 0 : 1;
-    return pa - pb;
-  });
-
-  for (const card of ordered) {
+  for (const card of heldCards) {
     if (!card.holdEffect) continue;
-
     const result = card.holdEffect.fn(gs);
-
     if (result.altitudeFlat) flatBonus += result.altitudeFlat;
     if (result.altitudeMult) multipliers.push(result.altitudeMult);
-    if (result.blockPenalty) blockPenaltyCount++;
-    if (result.blockSuitPenalty) blockSuitPenalty = true;
-
     log.push(result.message);
   }
 
-  return { flatBonus, multipliers, blockPenaltyCount, blockSuitPenalty, log };
+  return { flatBonus, multipliers, log };
 }
 
 // Master launch calculation
@@ -140,45 +157,41 @@ function calculateLaunch(heldCards, burnedCards, rng) {
 
   fullLog.push('🔧 ENGINE CHECK...');
 
-  // 1. Fuel from burned cards
-  const { fuel, log: fuelLog } = calculateFuel(burnedCards, heldCards, gs);
-  fullLog.push(...fuelLog);
+  // 1. Determine tank size from held cards
+  const tankSize = getTankSize(heldCards);
+  fullLog.push(`⛽ Fuel tank capacity: ${tankSize} slots`);
+
+  // 2. Apply tank — oldest cards fall off if over limit
+  const keptBurned = applyFuelTank(burnedCards, tankSize, fullLog);
+
+  // 3. Calculate fuel from kept cards
+  const fuel = calculateFuel(keptBurned, heldCards, fullLog);
   fullLog.push(`⛽ Total fuel: ${fuel.toLocaleString()} ft`);
 
-  // 2. Penalties
-  const penalties = checkEnginePenalties(burnedCards, heldCards, fullLog);
+  // 4. Poker hand bonus on held cards
+  const pokerHand = detectPokerHand(heldCards);
+  let pokerBonus = 0;
+  if (pokerHand) {
+    pokerBonus = pokerHand.bonus;
+    fullLog.push(`${pokerHand.emoji} ${pokerHand.name.toUpperCase()}! +${pokerBonus.toLocaleString()} ft`);
+  }
 
-  // 3. Held card effects
-  const { flatBonus, multipliers, blockPenaltyCount, blockSuitPenalty, log: effectLog } = processHeldEffects(heldCards, gs);
+  // 5. Held card effects
+  const { flatBonus, multipliers, log: effectLog } = processHeldEffects(heldCards, gs);
   fullLog.push(...effectLog);
 
-  // 4. Apply flat bonuses
-  let altitude = fuel + flatBonus;
-  if (flatBonus > 0) fullLog.push(`🚀 Flat bonuses: +${flatBonus.toLocaleString()} ft → ${altitude.toLocaleString()} ft`);
+  // 6. Apply flat bonuses (fuel + poker + card flats)
+  let altitude = fuel + pokerBonus + flatBonus;
+  const totalFlat = pokerBonus + flatBonus;
+  if (totalFlat > 0) fullLog.push(`🚀 Flat bonuses: +${totalFlat.toLocaleString()} ft → ${altitude.toLocaleString()} ft`);
 
-  // 5. Apply multipliers
+  // 7. Apply multipliers
   for (const mult of multipliers) {
     altitude = Math.round(altitude * mult);
     fullLog.push(`✖️ Multiplier ✖️${mult}x → ${altitude.toLocaleString()} ft`);
   }
 
-  // 6. Apply penalties (with block logic)
-  let remainingBlocks = blockPenaltyCount;
-  for (const penalty of penalties) {
-    if (penalty.type === 'suitConflict' && blockSuitPenalty) {
-      fullLog.push('🛡️ Suit conflict penalty BLOCKED by King of Hearts!');
-      continue;
-    }
-    if (remainingBlocks > 0) {
-      fullLog.push(`🛡️ Penalty BLOCKED by life support card!`);
-      remainingBlocks--;
-      continue;
-    }
-    altitude = Math.round(altitude * penalty.altitudeMult);
-    fullLog.push(`⚠️ Penalty applied → ${altitude.toLocaleString()} ft`);
-  }
-
-  // 7. Floor at 0
+  // 8. Floor at 0
   altitude = Math.max(0, altitude);
 
   const tier = getTier(altitude);
@@ -188,4 +201,4 @@ function calculateLaunch(heldCards, burnedCards, rng) {
   return { altitude, tier, log: fullLog };
 }
 
-export { calculateLaunch, getTier, ALTITUDE_TIERS, FUEL_PER_BURN_UNIT };
+export { calculateLaunch, getTier, ALTITUDE_TIERS, FUEL_PER_BURN_UNIT, BASE_TANK_SIZE, getTankSize, detectPokerHand, TANK_SLOT_CARDS };

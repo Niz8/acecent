@@ -1,7 +1,7 @@
 // config.js — Project Acecent
 // Version and readme content live here
 
-const VERSION = '0.5.0-alpha';
+const VERSION = '0.6.0-alpha';
 
 const README = {
   version: VERSION,
@@ -131,6 +131,24 @@ Penalties are applied after multipliers. Penalty-blocking cards are processed fi
       id: 'patchnotes',
       title: '📋 Patch Notes',
       patches: [
+        {
+          version: '0.6.0-alpha',
+          date: 'April 2026',
+          notes: [
+            'Fuel tank system — base 3 slots, face cards expand the tank',
+            'Burns beyond tank capacity overflow — oldest card fuel is lost',
+            'Tank strip UI shows filled and overflow slots in real time',
+            'Poker hand bonuses on held hand — One Pair through Straight Flush',
+            'Poker hand shown live in status bar so you know when to stop burning',
+            'Hearts fully reworked — penalty blocking removed, now provide tank slots and altitude bonuses',
+            'A♥️ and K♥️ give +2 tank slots, other Hearts face cards give +1',
+            'All Spades/Clubs face cards give +1 tank slot on hold',
+            'Signal interference penalty removed entirely',
+            'Engine stress penalty removed — tank system replaces it',
+            '10♦️ reworked — +12,000 ft if you hold 3+ of same suit',
+            'Status bar now shows tank status and current poker hand bonus',
+          ]
+        },
         {
           version: '0.5.0-alpha',
           date: 'April 2026',

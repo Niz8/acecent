@@ -4,6 +4,7 @@
 import { copyShareCard } from './share.js';
 import { showReadme } from './readme.js';
 import { VERSION } from './config.js';
+import { getTankSize, detectPokerHand, BASE_TANK_SIZE, TANK_SLOT_CARDS } from './effects.js';
 
 // --- Suit helpers ---
 // Force emoji presentation variant with U+FE0F to avoid black-on-black on iOS
@@ -179,8 +180,8 @@ function renderHand(container, gameState, onRedraw, onLaunch) {
   const existingScroll = container.querySelector('#detail-scroll');
   const savedScrollLeft = existingScroll ? existingScroll.scrollLeft : 0;
 
-  // Build penalty status
-  const penaltyStatus = getPenaltyStatus(gs);
+  // Build status bar
+  const penaltyStatus = getStatusBar(gs);
 
   container.innerHTML = `
     <div class="screen hand-screen">
@@ -197,9 +198,15 @@ function renderHand(container, gameState, onRedraw, onLaunch) {
         Tap a card below to select it for burning as ⛽ fuel, then redraw or launch.
       </div>
 
-      <!-- Penalty status bar -->
+      <!-- Status bar -->
       <div class="penalty-bar" id="penalty-bar">
         ${penaltyStatus.map(p => `<div class="penalty-pill ${p.type}">${p.icon} ${p.text}</div>`).join('')}
+      </div>
+
+      <!-- Fuel tank strip -->
+      <div class="tank-strip-wrap">
+        <div class="tank-strip-label">⛽ FUEL TANK</div>
+        <div class="tank-strip" id="tank-strip"></div>
       </div>
 
       <!-- Quick-view strip -->
@@ -210,12 +217,6 @@ function renderHand(container, gameState, onRedraw, onLaunch) {
       <!-- Horizontal scroll detail cards -->
       <div class="detail-scroll-wrap">
         <div class="detail-scroll" id="detail-scroll"></div>
-      </div>
-
-      <!-- Fuel tank -->
-      <div class="burned-section">
-        <div class="burned-label">⛽ FUEL TANK — ${gs.burnedCards.length} card${gs.burnedCards.length !== 1 ? 's' : ''} burned</div>
-        <div class="burned-chips" id="burned-chips"></div>
       </div>
 
       <!-- Actions -->
@@ -280,15 +281,28 @@ function renderHand(container, gameState, onRedraw, onLaunch) {
     scroll.scrollLeft = savedScrollLeft;
   }
 
-  // Burned chips
-  const burnedChips = container.querySelector('#burned-chips');
-  for (const card of gs.burnedCards) {
-    const chip = document.createElement('div');
-    chip.className = 'burned-chip';
-    const sym = getSuitSymbol(card.suit);
-    const col = getSuitColor(card.suit);
-    chip.innerHTML = `${card.emoji} ${card.rank}<span style="color:${col}">${sym}</span>`;
-    burnedChips.appendChild(chip);
+  // Tank strip
+  const tankStrip = container.querySelector('#tank-strip');
+  if (tankStrip) {
+    const tankSize = getTankSize(gs.hand);
+    const burned = gs.burnedCards;
+    // Show slots — filled from right, oldest may overflow
+    for (let i = 0; i < Math.max(tankSize, burned.length); i++) {
+      const slot = document.createElement('div');
+      const card = burned[i];
+      const isOverflow = i >= tankSize;
+      if (card) {
+        slot.className = `tank-slot tank-filled${isOverflow ? ' tank-overflow' : ''}`;
+        const sym = getSuitSymbol(card.suit);
+        const col = getSuitColor(card.suit);
+        slot.innerHTML = `${card.emoji}<span style="color:${col};font-size:0.6rem">${card.rank}${sym}</span>`;
+        if (isOverflow) slot.title = 'Over tank limit — fuel lost';
+      } else {
+        slot.className = 'tank-slot tank-empty';
+        slot.textContent = '·';
+      }
+      tankStrip.appendChild(slot);
+    }
   }
 
   container.querySelector('#redraw-btn').addEventListener('click', () => {
@@ -300,42 +314,27 @@ function renderHand(container, gameState, onRedraw, onLaunch) {
   });
 }
 
-// --- Penalty Status Bar ---
-function getPenaltyStatus(gs) {
+// --- Status Bar ---
+function getStatusBar(gs) {
   const pills = [];
   const heldCards = gs.hand;
   const burnedCount = gs.burnedCards.length;
+  const tankSize = getTankSize(heldCards);
+  const overflow = Math.max(0, burnedCount - tankSize);
 
-  const hasHeartBlock = heldCards.some(c =>
-    c.id === 'K_hearts' || c.id === 'Q_hearts' || c.id === 'A_hearts' ||
-    c.id === 'J_hearts' || c.id === '5_hearts' || c.id === '6_hearts'
-  );
-  const hasKingHeartsBlock = heldCards.some(c => c.id === 'K_hearts');
-
-  const redSuits = ['hearts', 'diamonds'];
-  const blackSuits = ['spades', 'clubs'];
-  const redCount = heldCards.filter(c => redSuits.includes(c.suit)).length;
-  const blackCount = heldCards.filter(c => blackSuits.includes(c.suit)).length;
-  const hasConflict = redCount >= 2 && blackCount >= 2;
-
-  // Engine stress
-  if (burnedCount >= 4 && !hasHeartBlock) {
-    pills.push({ type: 'pill-danger', icon: '⚠️', text: 'Engine Stress active' });
-  } else if (burnedCount === 3 && !hasHeartBlock) {
-    pills.push({ type: 'pill-warn', icon: '🟡', text: 'One more burn risks stress' });
-  } else if (burnedCount >= 4 && hasHeartBlock) {
-    pills.push({ type: 'pill-safe', icon: '🛡️', text: 'Stress blocked' });
+  // Tank status
+  if (overflow > 0) {
+    pills.push({ type: 'pill-danger', icon: '💨', text: `Tank full! ${overflow} card${overflow > 1 ? 's' : ''} overflowing` });
+  } else if (burnedCount >= tankSize - 1 && tankSize > burnedCount) {
+    pills.push({ type: 'pill-warn', icon: '⛽', text: `Tank: ${burnedCount}/${tankSize} — almost full` });
   } else {
-    pills.push({ type: 'pill-safe', icon: '✅', text: 'No stress' });
+    pills.push({ type: 'pill-safe', icon: '⛽', text: `Tank: ${burnedCount}/${tankSize} slots` });
   }
 
-  // Signal interference
-  if (hasConflict && !hasKingHeartsBlock) {
-    pills.push({ type: 'pill-danger', icon: '⚠️', text: 'Signal interference active' });
-  } else if (hasConflict && hasKingHeartsBlock) {
-    pills.push({ type: 'pill-safe', icon: '🛡️', text: 'Conflict blocked' });
-  } else {
-    pills.push({ type: 'pill-safe', icon: '✅', text: 'No interference' });
+  // Poker hand on current held hand
+  const pokerHand = detectPokerHand(heldCards);
+  if (pokerHand) {
+    pills.push({ type: 'pill-poker', icon: pokerHand.emoji, text: `${pokerHand.name} +${(pokerHand.bonus / 1000).toFixed(0)}k ft` });
   }
 
   return pills;

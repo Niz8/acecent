@@ -60,45 +60,50 @@ const DIAMOND_BURN_VALUES = {
 
 const CARD_EFFECTS = {
 
+  // ============================================================
+  // SPADES — Thrust: raw power, spade combos, fuel multipliers
+  // Face cards add +1 tank slot
+  // ============================================================
+
   'A_spades': {
     emoji: '🚀',
     holdEffect: {
-      desc: '✖️1.5x final altitude — only if you hold no pairs',
+      desc: '✖️1.5x altitude if no pairs + ⛽ +1 tank slot',
       emoji: '✖️',
       condition: (gs) => !gs.handHasPair,
       fn: (gs) => gs.handHasPair
-        ? { message: '❌ Ace of Spades: pair detected, bonus lost' }
-        : { altitudeMult: 1.5, message: '🚀 Ace of Spades: NO PAIRS — ✖️1.5x THRUST!' }
+        ? { tankSlots: 1, message: '🚀 Ace of Spades: pair detected, multiplier lost — but +1 tank slot' }
+        : { altitudeMult: 1.5, tankSlots: 1, message: '🚀 Ace of Spades: NO PAIRS — ✖️1.5x THRUST! +1 tank slot' }
     }
   },
 
   'K_spades': {
     emoji: '👑',
     holdEffect: {
-      desc: '✖️2x fuel from all burned ♠️',
+      desc: '✖️2x spade fuel + ⛽ +1 tank slot',
       emoji: '✖️',
-      fn: () => ({ fuelMult: 2, fuelMultSuit: 'spades', message: '👑 King of Spades: Spade fuel DOUBLED!' })
+      fn: () => ({ tankSlots: 1, message: '👑 King of Spades: Spade fuel DOUBLED! +1 tank slot' })
     }
   },
 
   'Q_spades': {
     emoji: '⚡',
     holdEffect: {
-      desc: '✖️1.3x final altitude if you hold 3+ ♠️',
+      desc: '✖️1.3x if 3+ ♠️ held + ⛽ +1 tank slot',
       emoji: '✖️',
       condition: (gs) => gs.heldSuitCount('spades') >= 3,
       fn: (gs) => gs.heldSuitCount('spades') >= 3
-        ? { altitudeMult: 1.3, message: '⚡ Queen of Spades: Full Thrust Array! ✖️1.3x altitude' }
-        : { message: '⚡ Queen of Spades: Need 3 spades — no bonus' }
+        ? { altitudeMult: 1.3, tankSlots: 1, message: '⚡ Queen of Spades: Full Thrust Array! ✖️1.3x altitude + 1 tank slot' }
+        : { tankSlots: 1, message: '⚡ Queen of Spades: Need 3 spades — no multiplier, but +1 tank slot' }
     }
   },
 
   'J_spades': {
     emoji: '💥',
     holdEffect: {
-      desc: '✖️1.15x final altitude',
+      desc: '✖️1.15x altitude + ⛽ +1 tank slot',
       emoji: '✖️',
-      fn: () => ({ altitudeMult: 1.15, message: '💥 Jack of Spades: Booster ignition! ✖️1.15x altitude' })
+      fn: () => ({ altitudeMult: 1.15, tankSlots: 1, message: '💥 Jack of Spades: Booster ignition! ✖️1.15x altitude + 1 tank slot' })
     }
   },
 
@@ -107,7 +112,7 @@ const CARD_EFFECTS = {
     holdEffect: {
       desc: '✖️1.5x fuel from all burned ♠️',
       emoji: '✖️',
-      fn: () => ({ fuelMult: 1.5, fuelMultSuit: 'spades', message: '🔥 10 of Spades: Auxiliary thrusters! Spade fuel ✖️1.5x' })
+      fn: () => ({ message: '🔥 10 of Spades: Auxiliary thrusters! Spade fuel ✖️1.5x' })
     }
   },
 
@@ -127,61 +132,63 @@ const CARD_EFFECTS = {
     burnValue: 8,
     emoji: '⛽',
     burnEffect: {
-      desc: '🔥 Burns for 4x face value',
+      desc: '🔥 Burns for boosted fuel value',
       emoji: '🔥',
-      fn: () => ({ message: '⛽ 2 of Spades: High-octane fuel! Boosted burn' })
+      fn: () => ({ message: '⛽ 2 of Spades: High-octane fuel!' })
     }
   },
 
   // ============================================================
-  // HEARTS — Life Support: penalty blocking, crew synergy
+  // HEARTS — Life Support: tank expansion and crew synergy
+  // Penalty blocking REMOVED. Hearts expand the fuel tank.
+  // Face cards add +1 or +2 tank slots.
   // ============================================================
 
   'A_hearts': {
     emoji: '💗',
     holdEffect: {
-      desc: '🛡️ Blocks one penalty + ✖️1.2x altitude',
-      emoji: '🛡️',
-      fn: () => ({ blockPenalty: true, altitudeMult: 1.2, message: '💗 Ace of Hearts: Crew protected! Penalty blocked + ✖️1.2x altitude' })
+      desc: '⛽ +2 tank slots + ✖️1.2x altitude',
+      emoji: '⛽',
+      fn: () => ({ altitudeMult: 1.2, tankSlots: 2, message: '💗 Ace of Hearts: Life support online! ✖️1.2x altitude + 2 tank slots' })
     }
   },
 
   'K_hearts': {
     emoji: '🫀',
     holdEffect: {
-      desc: '🛡️ Blocks ALL suit conflict penalties',
-      emoji: '🛡️',
-      fn: () => ({ blockSuitPenalty: true, message: '🫀 King of Hearts: Systems stable. All conflicts shielded!' })
+      desc: '⛽ +2 tank slots + ✖️1.15x altitude',
+      emoji: '⛽',
+      fn: () => ({ altitudeMult: 1.15, tankSlots: 2, message: '🫀 King of Hearts: Full life support! ✖️1.15x altitude + 2 tank slots' })
     }
   },
 
   'Q_hearts': {
     emoji: '🌹',
     holdEffect: {
-      desc: '🛡️ Blocks one penalty',
-      emoji: '🛡️',
-      fn: () => ({ blockPenalty: true, message: '🌹 Queen of Hearts: One penalty neutralized!' })
+      desc: '⛽ +1 tank slot + 🚀 +10,000 ft',
+      emoji: '⛽',
+      fn: () => ({ altitudeFlat: 10000, tankSlots: 1, message: '🌹 Queen of Hearts: Extended reserves! +10,000 ft + 1 tank slot' })
     }
   },
 
   'J_hearts': {
     emoji: '🩺',
     holdEffect: {
-      desc: '🛡️ Blocks one penalty + ✖️1.1x altitude',
-      emoji: '🛡️',
-      fn: () => ({ blockPenalty: true, altitudeMult: 1.1, message: '🩺 Jack of Hearts: Medic on deck! Penalty blocked + ✖️1.1x altitude' })
+      desc: '⛽ +1 tank slot + ✖️1.1x altitude',
+      emoji: '⛽',
+      fn: () => ({ altitudeMult: 1.1, tankSlots: 1, message: '🩺 Jack of Hearts: Medic on deck! ✖️1.1x altitude + 1 tank slot' })
     }
   },
 
   '9_hearts': {
     emoji: '💞',
     holdEffect: {
-      desc: '✖️1.1x altitude per ♥️ held (including this)',
+      desc: '✖️1.1x altitude per ♥️ held + ⛽ +1 tank slot',
       emoji: '✖️',
       fn: (gs) => {
         const count = gs.heldSuitCount('hearts');
         const mult = parseFloat((1 + count * 0.1).toFixed(2));
-        return { altitudeMult: mult, message: `💞 9 of Hearts: Crew synergy! ✖️${mult}x altitude (${count} hearts)` };
+        return { altitudeMult: mult, tankSlots: 1, message: `💞 9 of Hearts: Crew synergy! ✖️${mult}x altitude + 1 tank slot` };
       }
     }
   },
@@ -189,18 +196,18 @@ const CARD_EFFECTS = {
   '6_hearts': {
     emoji: '🛡️',
     holdEffect: {
-      desc: '🛡️ Blocks one penalty',
-      emoji: '🛡️',
-      fn: () => ({ blockPenalty: true, message: '🛡️ 6 of Hearts: Emergency shielding! Penalty blocked' })
+      desc: '⛽ +1 tank slot',
+      emoji: '⛽',
+      fn: () => ({ tankSlots: 1, message: '🛡️ 6 of Hearts: Emergency reserves! +1 tank slot' })
     }
   },
 
   '5_hearts': {
     emoji: '🛡️',
     holdEffect: {
-      desc: '🛡️ Blocks one penalty',
-      emoji: '🛡️',
-      fn: () => ({ blockPenalty: true, message: '🛡️ 5 of Hearts: Backup shielding! Penalty blocked' })
+      desc: '⛽ +1 tank slot',
+      emoji: '⛽',
+      fn: () => ({ tankSlots: 1, message: '🛡️ 5 of Hearts: Backup reserves! +1 tank slot' })
     }
   },
 
@@ -307,12 +314,20 @@ const CARD_EFFECTS = {
   '10_diamonds': {
     emoji: '📡',
     holdEffect: {
-      desc: '✖️1.1x per unique suit in hand',
-      emoji: '✖️',
+      desc: '🚀 +12,000 ft if you hold 3+ of same suit',
+      emoji: '🚀',
+      condition: (gs) => {
+        const suitCounts = {};
+        for (const c of gs.heldCards) suitCounts[c.suit] = (suitCounts[c.suit] || 0) + 1;
+        return Object.values(suitCounts).some(v => v >= 3);
+      },
       fn: (gs) => {
-        const suits = new Set(gs.heldCards.map(c => c.suit));
-        const mult = parseFloat((suits.size * 1.1).toFixed(2));
-        return { altitudeMult: mult, message: `📡 10 of Diamonds: Multi-system sync! ✖️${mult}x altitude (${suits.size} suits)` };
+        const suitCounts = {};
+        for (const c of gs.heldCards) suitCounts[c.suit] = (suitCounts[c.suit] || 0) + 1;
+        const qualifies = Object.values(suitCounts).some(v => v >= 3);
+        return qualifies
+          ? { altitudeFlat: 12000, message: '📡 10 of Diamonds: Formation lock! +12,000 ft' }
+          : { message: '📡 10 of Diamonds: Need 3 of same suit — no bonus' };
       }
     }
   },
@@ -343,6 +358,7 @@ const CARD_EFFECTS = {
 
   // ============================================================
   // CLUBS — Mission Control: redraws, burn bonuses, peek
+  // Hold face cards add +1 tank slot
   // ============================================================
 
   'A_clubs': {
@@ -357,9 +373,9 @@ const CARD_EFFECTS = {
   'K_clubs': {
     emoji: '📻',
     holdEffect: {
-      desc: '✖️1.2x final altitude',
+      desc: '✖️1.2x altitude + ⛽ +1 tank slot',
       emoji: '✖️',
-      fn: () => ({ altitudeMult: 1.2, message: '📻 King of Clubs: Mission Control confirms! ✖️1.2x altitude' })
+      fn: () => ({ altitudeMult: 1.2, tankSlots: 1, message: '📻 King of Clubs: Mission Control confirms! ✖️1.2x altitude + 1 tank slot' })
     }
   },
 
@@ -375,9 +391,9 @@ const CARD_EFFECTS = {
   'J_clubs': {
     emoji: '🧭',
     holdEffect: {
-      desc: '✖️1.25x final altitude',
+      desc: '✖️1.25x altitude + ⛽ +1 tank slot',
       emoji: '✖️',
-      fn: () => ({ altitudeMult: 1.25, message: '🧭 Jack of Clubs: Optimal trajectory locked! ✖️1.25x altitude' })
+      fn: () => ({ altitudeMult: 1.25, tankSlots: 1, message: '🧭 Jack of Clubs: Optimal trajectory locked! ✖️1.25x altitude + 1 tank slot' })
     }
   },
 
