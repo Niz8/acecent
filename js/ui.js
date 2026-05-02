@@ -286,11 +286,12 @@ function renderHand(container, gameState, onRedraw, onLaunch) {
   if (tankStrip) {
     const tankSize = getTankSize(gs.hand);
     const burned = gs.burnedCards;
-    // Show slots — filled from right, oldest may overflow
+    const overflow = Math.max(0, burned.length - tankSize);
+
     for (let i = 0; i < Math.max(tankSize, burned.length); i++) {
       const slot = document.createElement('div');
       const card = burned[i];
-      const isOverflow = i >= tankSize;
+      const isOverflow = card && i < overflow; // oldest cards overflow first
       if (card) {
         slot.className = `tank-slot tank-filled${isOverflow ? ' tank-overflow' : ''}`;
         const sym = getSuitSymbol(card.suit);
