@@ -934,8 +934,44 @@ html, body {
 }
 
 /* =====================
-   FLOATING HELP BUTTON
+   UPDATE BANNER
    ===================== */
+
+.update-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3000;
+  background: #1a1a10;
+  border-bottom: 2px solid #f5c518;
+  padding: 0.6rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #f5c518;
+  font-family: 'Courier New', Courier, monospace;
+  letter-spacing: 0.05em;
+}
+
+.update-btn {
+  background: #f5c518;
+  color: #0a0a1a;
+  border: none;
+  border-radius: 4px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: 'Courier New', Courier, monospace;
+  cursor: pointer;
+  white-space: nowrap;
+  margin-left: 1rem;
+}
+
+.update-btn:active {
+  opacity: 0.8;
+}
 
 .floating-help-btn {
   position: fixed;

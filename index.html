@@ -23,6 +23,27 @@
 
     initFirebase();
 
+    // Version mismatch check — prompt cache refresh
+    const LS_LIVE_VERSION = 'acecent_live_version';
+    import('./js/config.js').then(({ VERSION }) => {
+      const cachedVersion = localStorage.getItem(LS_LIVE_VERSION);
+      if (cachedVersion && cachedVersion !== VERSION) {
+        const banner = document.createElement('div');
+        banner.className = 'update-banner';
+        banner.innerHTML = `
+          🚀 New version available (v${VERSION})
+          <button class="update-btn" id="update-btn">Refresh now</button>
+        `;
+        document.body.prepend(banner);
+        document.getElementById('update-btn').addEventListener('click', () => {
+          localStorage.setItem(LS_LIVE_VERSION, VERSION);
+          window.location.reload(true);
+        });
+      } else {
+        localStorage.setItem(LS_LIVE_VERSION, VERSION);
+      }
+    });
+
     // Floating help button — always accessible
     document.getElementById('floating-help-btn').addEventListener('click', () => showReadme(false));
 
