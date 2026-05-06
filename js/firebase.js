@@ -4,6 +4,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js';
 import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore.js';
 import { getDailyDateString } from './deck.js';
+import { VERSION } from './config.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyAp_zaKsyGfm_CKwzVuFCG_pWrk1zj9Df8",
@@ -37,6 +38,7 @@ async function submitScore(playerName, altitude, tierName) {
       altitude,
       tierName,
       date: dateString,
+      version: VERSION,
       submittedAt: serverTimestamp(),
     });
     return { success: true };

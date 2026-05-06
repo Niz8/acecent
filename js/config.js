@@ -1,7 +1,7 @@
 // config.js — Project Acecent
 // Version and readme content live here
 
-const VERSION = '0.6.0-alpha';
+const VERSION = '0.6.5-alpha';
 
 const README = {
   version: VERSION,
@@ -17,14 +17,41 @@ Compare your altitude with friends and see who reaches Orbital.`
       id: 'howtoplay',
       title: '🎴 How to Play',
       content: `1. You are dealt five cards from the daily deck.
-2. Each card has a BURN value — cards you discard become rocket fuel and determine your base altitude.
-3. Some cards have HOLD effects — keep them in your hand and they trigger at launch.
-4. Some cards have BURN effects — discard them for fuel and get a bonus (like an extra redraw).
-5. Select cards in your hand to mark them for burning, then hit Redraw to burn them and draw replacements.
-6. You start with 2 redraws. Some cards give you more.
+2. Each card has a BURN value — cards you discard become rocket fuel.
+3. Some cards have HOLD effects — keep them in your hand and they trigger at launch (multipliers, flat bonuses, tank slots).
+4. Some cards have BURN effects — discard them for a bonus like an extra redraw or extended peek.
+5. Tap a detail card to select it for burning, then hit Redraw to burn selected cards and draw replacements.
+6. You start with 2 redraws. Some cards give you more when burned.
 7. When you are happy with your hand, hit LAUNCH.
-8. Your final altitude is calculated from your fuel plus any hold effects, multipliers, and penalties.
+8. Your final altitude is calculated from your tank fuel, poker hand bonus, held card effects, and multipliers.
 9. You get one launch per day. Make it count.`
+    },
+    {
+      id: 'tank',
+      title: '⛽ Fuel Tank',
+      content: `Your fuel tank has a base capacity of 3 card slots. Only fuel from cards within the tank counts toward your altitude — burns beyond the limit overflow and are lost.
+
+Holding face cards (Jack, Queen, King, Ace) of Spades, Hearts, or Clubs expands your tank. Hearts face cards give the most expansion — Ace and King of Hearts add 2 slots each. All other non-Diamond face cards add 1 slot each.
+
+The tank strip at the top of your hand screen shows which cards are in range and which are overflowing. Oldest burns overflow first.
+
+Strategy: decide early whether you are building a deep-burn deck (hold tank-expanding face cards) or a tight hold deck (burn fewer cards, rely on multipliers).`
+    },
+    {
+      id: 'poker',
+      title: '🃏 Poker Hand Bonuses',
+      content: `Your held hand at launch is evaluated for poker hands. Bonuses are flat altitude additions applied before multipliers — so they feed into your multiplier chain.
+
+✌️ One Pair — +10,000 ft
+👯 Two Pair — +25,000 ft
+🎯 Three of a Kind — +50,000 ft
+📈 Straight (5 consecutive ranks) — +100,000 ft
+♻️ Flush (5 same suit) — +150,000 ft
+🏠 Full House — +80,000 ft
+💫 Four of a Kind — +200,000 ft
+🌟 Straight Flush — +400,000 ft
+
+The status bar shows your current best poker hand live as you redraw. Stop burning when you hit a strong hand — more burns expand your tank but may break your poker configuration.`
     },
     {
       id: 'tiers',
@@ -49,27 +76,27 @@ Orbital requires near-perfect play. Most players land in Stratosphere or Mesosph
           theme: 'Thrust — raw power, spade combos, fuel multipliers',
           color: '#3a7bd5',
           cards: [
-            { card: 'A♠️', type: 'HOLD', desc: '✖️1.5x final altitude — only if you hold no pairs' },
-            { card: 'K♠️', type: 'HOLD', desc: '✖️2x fuel value from all burned Spades' },
-            { card: 'Q♠️', type: 'HOLD', desc: '✖️1.3x final altitude if you hold 3+ Spades' },
-            { card: 'J♠️', type: 'HOLD', desc: '✖️1.15x final altitude' },
+            { card: 'A♠️', type: 'HOLD', desc: '✖️1.5x altitude if no pairs + ⛽ +1 tank slot' },
+            { card: 'K♠️', type: 'HOLD', desc: '✖️2x spade fuel + ⛽ +1 tank slot' },
+            { card: 'Q♠️', type: 'HOLD', desc: '✖️1.3x if 3+ Spades held + ⛽ +1 tank slot' },
+            { card: 'J♠️', type: 'HOLD', desc: '✖️1.15x altitude + ⛽ +1 tank slot' },
             { card: '10♠️', type: 'HOLD', desc: '✖️1.5x fuel from all burned Spades — stacks with King' },
             { card: '7♠️', type: 'HOLD', desc: '+5,000 ft if you hold any other Spade' },
-            { card: '2♠️', type: 'BURN', desc: 'Burns for 4x its face value in fuel' },
+            { card: '2♠️', type: 'BURN', desc: 'Burns for boosted fuel value' },
           ]
         },
         {
           name: 'Hearts ♥️',
-          theme: 'Life Support — penalty blocking and crew synergy',
+          theme: 'Life Support — fuel tank expansion and crew synergy',
           color: '#e8334a',
           cards: [
-            { card: 'A♥️', type: 'HOLD', desc: 'Blocks one penalty + ✖️1.2x altitude' },
-            { card: 'K♥️', type: 'HOLD', desc: 'Blocks ALL suit conflict penalties' },
-            { card: 'Q♥️', type: 'HOLD', desc: 'Blocks one penalty' },
-            { card: 'J♥️', type: 'HOLD', desc: 'Blocks one penalty + ✖️1.1x altitude' },
-            { card: '9♥️', type: 'HOLD', desc: '✖️1.1x altitude per Heart held including this one' },
-            { card: '6♥️', type: 'HOLD', desc: 'Blocks one penalty' },
-            { card: '5♥️', type: 'HOLD', desc: 'Blocks one penalty' },
+            { card: 'A♥️', type: 'HOLD', desc: '⛽ +2 tank slots + ✖️1.2x altitude' },
+            { card: 'K♥️', type: 'HOLD', desc: '⛽ +2 tank slots + ✖️1.15x altitude' },
+            { card: 'Q♥️', type: 'HOLD', desc: '⛽ +1 tank slot + 🚀 +10,000 ft' },
+            { card: 'J♥️', type: 'HOLD', desc: '⛽ +1 tank slot + ✖️1.1x altitude' },
+            { card: '9♥️', type: 'HOLD', desc: '⛽ +1 tank slot + ✖️1.1x per Heart held' },
+            { card: '6♥️', type: 'HOLD', desc: '⛽ +1 tank slot' },
+            { card: '5♥️', type: 'HOLD', desc: '⛽ +1 tank slot' },
             { card: '4♥️', type: 'BURN', desc: '+1 redraw when burned' },
             { card: '3♥️', type: 'BURN', desc: '+1 redraw when burned' },
             { card: '2♥️', type: 'BURN', desc: '+1 redraw when burned' },
@@ -118,19 +145,32 @@ Orbital requires near-perfect play. Most players land in Stratosphere or Mesosph
     },
     {
       id: 'penalties',
-      title: '⚠️ Penalties',
-      content: `Two global penalties are checked at launch:
+      title: '⚠️ Watch Out For',
+      content: `TANK OVERFLOW: If you burn more cards than your tank holds, the oldest burns are lost. Watch the tank strip — overflowing slots show with a 💨 icon. Expand your tank by holding face cards before burning aggressively.
 
-ENGINE STRESS: If you burned 4 or more cards and hold no Hearts life support card, your final altitude is reduced to 85%. Hold any Heart with a shield effect to protect against this.
+BLACK JOKER: The Black Joker held effect is random. It could double your altitude or cut it in half. High risk, high reward.
 
-SIGNAL INTERFERENCE: If you hold 2 or more red cards AND 2 or more black cards, your altitude is reduced to 90%. The King of Hearts blocks this specifically.
+POKER HAND BREAKS: Adding or removing a card from your hand can break a poker hand configuration. The status bar shows your current best hand live — check it before hitting redraw.
 
-Penalties are applied after multipliers. Penalty-blocking cards are processed first.`
+DIAMOND BURN VALUE: All Diamond cards burn for half their face value. They are designed to be held, not burned.`
     },
     {
       id: 'patchnotes',
       title: '📋 Patch Notes',
       patches: [
+        {
+          version: '0.6.5-alpha',
+          date: 'May 2026',
+          notes: [
+            'Version stamp added to all score submissions for auditability',
+            'Force refresh banner shown to players on cached older versions',
+            'Help screen fully updated — removed all penalty blocking references',
+            'Added Fuel Tank and Poker Hand Bonus sections to help screen',
+            'Hearts card list updated to reflect tank slot mechanics',
+            'Watch Out For section replaces old Penalties section',
+            'Tank overflow UI fixed — oldest cards now correctly shown as overflowing',
+          ]
+        },
         {
           version: '0.6.0-alpha',
           date: 'April 2026',
