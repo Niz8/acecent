@@ -67,12 +67,12 @@ function renderChip(card, gameState, isSelected) {
 }
 
 // --- Full detail card (horizontal scroll area) ---
-function renderDetailCard(card, gameState, isSelected) {
+function renderDetailCard(card, gameState, isSelected, burnOrder = 0) {
   const el = document.createElement('div');
   const conditionStatus = getConditionStatus(card, gameState);
   let cls = 'detail-card';
   if (isSelected) cls += ' detail-selected';
-  if (conditionStatus === 'active') cls += ' detail-condition-met';
+  if (conditionStatus === 'active' && !isSelected) cls += ' detail-condition-met';
   if (conditionStatus === 'inactive') cls += ' detail-condition-unmet';
   el.className = cls;
   el.dataset.cardId = card.id;
@@ -98,8 +98,13 @@ function renderDetailCard(card, gameState, isSelected) {
     ? `<div class="detail-no-effect">No special effect — solid fuel value</div>`
     : '';
 
+  const burnBadge = burnOrder > 0
+    ? `<div class="burn-order-badge">${burnOrder}</div>`
+    : '';
+
   el.innerHTML = `
     <div class="detail-card-inner">
+      ${burnBadge}
       <div class="detail-header">
         <span class="detail-rank" style="color:${col}">${card.rank}</span>
         <span class="detail-suit" style="color:${col}">${sym}</span>
@@ -174,7 +179,7 @@ function renderNameEntry(container, gameState, onStart) {
 function renderHand(container, gameState, onRedraw, onLaunch) {
   const gs = gameState;
   const hand = gs.hand;
-  const selectedCount = gs.selectedForDiscard.size;
+  const selectedCount = gs.selectedForDiscard.length;
 
   // Save scroll position before re-render
   const existingScroll = container.querySelector('#detail-scroll');
@@ -238,13 +243,12 @@ function renderHand(container, gameState, onRedraw, onLaunch) {
   // Quick-view strip — tap scrolls detail to that card, does NOT select
   const strip = container.querySelector('#quickview-strip');
   hand.forEach((card, index) => {
-    const isSelected = gs.selectedForDiscard.has(card.id);
+    const isSelected = gs.selectedForDiscard.includes(card.id);
     const chip = renderChip(card, gameState, isSelected);
     chip.addEventListener('click', () => {
-      // Scroll detail area to this card
       const scroll = container.querySelector('#detail-scroll');
       if (scroll) {
-        const cardWidth = 200 + 12; // card width + gap
+        const cardWidth = 200 + 12;
         scroll.scrollTo({ left: index * cardWidth, behavior: 'smooth' });
       }
     });
@@ -264,11 +268,12 @@ function renderHand(container, gameState, onRedraw, onLaunch) {
     strip.appendChild(peekChip);
   }
 
-  // Detail scroll — tap DOES select/deselect
+  // Detail scroll — tap DOES select/deselect, shows burn order number
   const scroll = container.querySelector('#detail-scroll');
   hand.forEach((card) => {
-    const isSelected = gs.selectedForDiscard.has(card.id);
-    const detailCard = renderDetailCard(card, gameState, isSelected);
+    const isSelected = gs.selectedForDiscard.includes(card.id);
+    const burnOrder = gs.burnOrderOf(card.id);
+    const detailCard = renderDetailCard(card, gameState, isSelected, burnOrder);
     detailCard.addEventListener('click', () => {
       gs.toggleSelectCard(card.id);
       renderHand(container, gameState, onRedraw, onLaunch);

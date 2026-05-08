@@ -27,7 +27,7 @@ class GameState {
 
     this.hand = [];        // current 5-card hand (held)
     this.burnedCards = []; // cards discarded as fuel
-    this.selectedForDiscard = new Set(); // card ids selected in UI
+    this.selectedForDiscard = []; // ordered array of card ids — order = burn order
 
     this.redraws = BASE_REDRAWS;
     this.redrawsUsed = 0;
@@ -71,32 +71,39 @@ class GameState {
 
   toggleSelectCard(cardId) {
     if (this.phase !== PHASES.HAND) return;
-    if (this.selectedForDiscard.has(cardId)) {
-      this.selectedForDiscard.delete(cardId);
+    const idx = this.selectedForDiscard.indexOf(cardId);
+    if (idx !== -1) {
+      // Deselect — remove and shift everything after it down
+      this.selectedForDiscard.splice(idx, 1);
     } else {
-      this.selectedForDiscard.add(cardId);
+      // Select — append to end
+      this.selectedForDiscard.push(cardId);
     }
     this.emit('stateChange');
+  }
+
+  // Get burn order number for a card (1-based), or 0 if not selected
+  burnOrderOf(cardId) {
+    const idx = this.selectedForDiscard.indexOf(cardId);
+    return idx === -1 ? 0 : idx + 1;
   }
 
   // --- Redraw ---
 
   canRedraw() {
-    return this.redraws > 0 && this.selectedForDiscard.size > 0 && this.phase === PHASES.HAND;
+    return this.redraws > 0 && this.selectedForDiscard.length > 0 && this.phase === PHASES.HAND;
   }
 
   doRedraw() {
     if (!this.canRedraw()) return;
 
     const discardedIds = [...this.selectedForDiscard];
-    const discarded = this.hand.filter(c => discardedIds.includes(c.id));
+    const discarded = discardedIds.map(id => this.hand.find(c => c.id === id)).filter(Boolean);
     const kept = this.hand.filter(c => !discardedIds.includes(c.id));
 
-    // Burn discarded cards as fuel
+    // Burn discarded cards in selection order
     for (const card of discarded) {
       this.burnedCards.push(card);
-
-      // Check for burn effects (e.g. +1 redraw)
       if (card.burnEffect) {
         const result = card.burnEffect.fn();
         if (result.redraws) {
@@ -110,11 +117,9 @@ class GameState {
       }
     }
 
-    // Deduct one redraw
     this.redraws--;
     this.redrawsUsed++;
 
-    // Draw replacements
     const newCards = [];
     for (let i = 0; i < discarded.length; i++) {
       const drawn = this.drawCard();
@@ -122,7 +127,7 @@ class GameState {
     }
 
     this.hand = [...kept, ...newCards];
-    this.selectedForDiscard = new Set();
+    this.selectedForDiscard = [];
 
     this.emit('stateChange');
   }

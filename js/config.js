@@ -1,7 +1,7 @@
 // config.js — Project Acecent
 // Version and readme content live here
 
-const VERSION = '0.6.5-alpha';
+const VERSION = '0.6.6-alpha';
 
 const README = {
   version: VERSION,
@@ -158,6 +158,16 @@ DIAMOND BURN VALUE: All Diamond cards burn for half their face value. They are d
       id: 'patchnotes',
       title: '📋 Patch Notes',
       patches: [
+        {
+          version: '0.6.6-alpha',
+          date: 'May 2026',
+          notes: [
+            'Burn order numbers shown on detail cards — first selected burns first',
+            'Deselecting a card renumbers all subsequent selections downward',
+            'Burn order determines which card overflows the tank if you exceed capacity',
+            'Oldest burns (lowest numbers) overflow first — clear visibility of what gets dropped',
+          ]
+        },
         {
           version: '0.6.5-alpha',
           date: 'May 2026',
