@@ -1,7 +1,7 @@
 // config.js — Project Acecent
 // Version and readme content live here
 
-const VERSION = '0.6.6-alpha';
+const VERSION = '0.6.7-alpha';
 
 const README = {
   version: VERSION,
@@ -158,6 +158,15 @@ DIAMOND BURN VALUE: All Diamond cards burn for half their face value. They are d
       id: 'patchnotes',
       title: '📋 Patch Notes',
       patches: [
+        {
+          version: '0.6.7-alpha',
+          date: 'May 2026',
+          notes: [
+            'Fixed bug where burning cards did not draw replacements correctly',
+            'Fixed tank strip not rendering after a burn',
+            'Added null safety guards to scroll position restore and tank strip render',
+          ]
+        },
         {
           version: '0.6.6-alpha',
           date: 'May 2026',

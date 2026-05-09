@@ -98,10 +98,12 @@ class GameState {
     if (!this.canRedraw()) return;
 
     const discardedIds = [...this.selectedForDiscard];
+
+    // Build discard list in selection order, kept list preserves hand order
     const discarded = discardedIds.map(id => this.hand.find(c => c.id === id)).filter(Boolean);
     const kept = this.hand.filter(c => !discardedIds.includes(c.id));
 
-    // Burn discarded cards in selection order
+    // Burn in selection order
     for (const card of discarded) {
       this.burnedCards.push(card);
       if (card.burnEffect) {
@@ -120,8 +122,10 @@ class GameState {
     this.redraws--;
     this.redrawsUsed++;
 
+    // Always draw exactly discardedIds.length replacements — not discarded.length
+    // discardedIds.length is the source of truth for how many cards left the hand
     const newCards = [];
-    for (let i = 0; i < discarded.length; i++) {
+    for (let i = 0; i < discardedIds.length; i++) {
       const drawn = this.drawCard();
       if (drawn) newCards.push(drawn);
     }

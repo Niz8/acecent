@@ -282,33 +282,37 @@ function renderHand(container, gameState, onRedraw, onLaunch) {
   });
 
   // Restore scroll position after re-render
-  if (savedScrollLeft > 0) {
+  if (scroll && savedScrollLeft > 0) {
     scroll.scrollLeft = savedScrollLeft;
   }
 
-  // Tank strip
-  const tankStrip = container.querySelector('#tank-strip');
-  if (tankStrip) {
-    const tankSize = getTankSize(gs.hand);
-    const burned = gs.burnedCards;
-    const overflow = Math.max(0, burned.length - tankSize);
+  // Tank strip — wrapped in try/catch so upstream errors don't silently prevent rendering
+  try {
+    const tankStrip = container.querySelector('#tank-strip');
+    if (tankStrip) {
+      const tankSize = getTankSize(gs.hand);
+      const burned = gs.burnedCards;
+      const overflow = Math.max(0, burned.length - tankSize);
 
-    for (let i = 0; i < Math.max(tankSize, burned.length); i++) {
-      const slot = document.createElement('div');
-      const card = burned[i];
-      const isOverflow = card && i < overflow; // oldest cards overflow first
-      if (card) {
-        slot.className = `tank-slot tank-filled${isOverflow ? ' tank-overflow' : ''}`;
-        const sym = getSuitSymbol(card.suit);
-        const col = getSuitColor(card.suit);
-        slot.innerHTML = `${card.emoji}<span style="color:${col};font-size:0.6rem">${card.rank}${sym}</span>`;
-        if (isOverflow) slot.title = 'Over tank limit — fuel lost';
-      } else {
-        slot.className = 'tank-slot tank-empty';
-        slot.textContent = '·';
+      for (let i = 0; i < Math.max(tankSize, burned.length); i++) {
+        const slot = document.createElement('div');
+        const card = burned[i];
+        const isOverflow = card && i < overflow;
+        if (card) {
+          slot.className = `tank-slot tank-filled${isOverflow ? ' tank-overflow' : ''}`;
+          const sym = getSuitSymbol(card.suit);
+          const col = getSuitColor(card.suit);
+          slot.innerHTML = `${card.emoji}<span style="color:${col};font-size:0.6rem">${card.rank}${sym}</span>`;
+          if (isOverflow) slot.title = 'Over tank limit — fuel lost';
+        } else {
+          slot.className = 'tank-slot tank-empty';
+          slot.textContent = '·';
+        }
+        tankStrip.appendChild(slot);
       }
-      tankStrip.appendChild(slot);
     }
+  } catch (e) {
+    console.warn('Tank strip render error:', e);
   }
 
   container.querySelector('#redraw-btn').addEventListener('click', () => {
