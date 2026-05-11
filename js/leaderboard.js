@@ -85,7 +85,7 @@ function renderLeaderboard(container, playerName, playerAltitude, onClose) {
         : `<div class="leaderboard-empty">No records yet.</div>`
       }
       <div class="leaderboard-quote"><em>${getDailyQuote()}</em></div>
-      <div class="hof-disclaimer">Scores tracked since May 2026</div>
+      <div class="hof-disclaimer">Scores tracked since May 2, 2026</div>
     `;
   });
 }

@@ -18,7 +18,7 @@ const firebaseConfig = {
 let db = null;
 
 // May 1 2026 — start of fuel tank era scores
-const HALL_OF_FAME_START = Timestamp.fromDate(new Date('2026-05-01T00:00:00Z'));
+const HALL_OF_FAME_START = Timestamp.fromDate(new Date('2026-05-02T00:00:00Z'));
 
 function initFirebase() {
   try {
