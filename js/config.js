@@ -175,6 +175,8 @@ DIAMOND BURN VALUE: All Diamond cards burn for half their face value. They are d
             '9♦️ new effect: ✖️1.3x altitude if fuel tank has any empty slots at launch',
             'Empty tank slot condition accounts for tank expansion from held face cards',
             'Fixed 10♦️ help screen description (was incorrect from v0.5.0)',
+            'Hall of fame added to leaderboard screen — all-time #1 score since May 2026',
+            'Daily rotating quote on leaderboard screen — one per day of the week, same for all players',
           ]
         },
         {

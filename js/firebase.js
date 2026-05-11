@@ -2,7 +2,7 @@
 // Daily leaderboard read/write via Firestore
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js';
-import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore.js';
+import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp, Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore.js';
 import { getDailyDateString } from './deck.js';
 import { VERSION } from './config.js';
 
@@ -16,6 +16,9 @@ const firebaseConfig = {
 };
 
 let db = null;
+
+// May 1 2026 — start of fuel tank era scores
+const HALL_OF_FAME_START = Timestamp.fromDate(new Date('2026-05-01T00:00:00Z'));
 
 function initFirebase() {
   try {
@@ -69,6 +72,27 @@ async function fetchDailyLeaderboard(maxEntries = 10) {
   }
 }
 
+// Fetch all-time #1 score since May 2026 (fuel tank era)
+// Returns { success, score } where score is { playerName, altitude, tierName } or null
+async function fetchHallOfFame() {
+  if (!db) return { success: false, score: null };
+  try {
+    const q = query(
+      collection(db, 'scores'),
+      where('submittedAt', '>=', HALL_OF_FAME_START),
+      orderBy('submittedAt', 'asc'),
+      orderBy('altitude', 'desc'),
+      limit(1)
+    );
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) return { success: true, score: null };
+    return { success: true, score: snapshot.docs[0].data() };
+  } catch (e) {
+    console.warn('Hall of fame fetch failed:', e);
+    return { success: false, score: null };
+  }
+}
+
 // Get the player's rank on the leaderboard for today
 // Returns rank (1-based) or null if not found
 async function getPlayerRank(playerName, altitude) {
@@ -88,4 +112,4 @@ async function getPlayerRank(playerName, altitude) {
   }
 }
 
-export { initFirebase, submitScore, fetchDailyLeaderboard, getPlayerRank };
+export { initFirebase, submitScore, fetchDailyLeaderboard, fetchHallOfFame, getPlayerRank };
