@@ -29,10 +29,10 @@ function renderLeaderboard(container, playerName, playerAltitude, onClose) {
       <div class="leaderboard-list" id="leaderboard-list">
         <div class="leaderboard-loading">Loading scores...</div>
       </div>
+      <div class="leaderboard-quote" id="leaderboard-quote"></div>
       <div class="hall-of-fame" id="hall-of-fame">
         <div class="leaderboard-loading">Loading hall of fame...</div>
       </div>
-      <div class="leaderboard-quote" id="leaderboard-quote"></div>
     </div>
   `;
 
@@ -42,10 +42,6 @@ function renderLeaderboard(container, playerName, playerAltitude, onClose) {
     now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
   container.querySelector('#leaderboard-close').addEventListener('click', onClose);
-
-  // Daily quote
-  container.querySelector('#leaderboard-quote').innerHTML =
-    `<em>${getDailyQuote()}</em>`;
 
   // Fetch daily leaderboard
   fetchDailyLeaderboard(20).then(({ success, scores }) => {
@@ -88,6 +84,7 @@ function renderLeaderboard(container, playerName, playerAltitude, onClose) {
           </div>`
         : `<div class="leaderboard-empty">No records yet.</div>`
       }
+      <div class="leaderboard-quote"><em>${getDailyQuote()}</em></div>
       <div class="hof-disclaimer">Scores tracked since May 2026</div>
     `;
   });

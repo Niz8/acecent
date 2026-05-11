@@ -80,7 +80,6 @@ async function fetchHallOfFame() {
     const q = query(
       collection(db, 'scores'),
       where('submittedAt', '>=', HALL_OF_FAME_START),
-      orderBy('submittedAt', 'asc'),
       orderBy('altitude', 'desc'),
       limit(1)
     );
