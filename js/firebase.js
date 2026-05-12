@@ -72,23 +72,26 @@ async function fetchDailyLeaderboard(maxEntries = 10) {
   }
 }
 
-// Fetch all-time #1 score since May 2026 (fuel tank era)
-// Returns { success, score } where score is { playerName, altitude, tierName } or null
+// Fetch all-time top scores since May 2 2026 (fuel tank era)
+// Returns { success, scores } — multiple entries if tied at the top
 async function fetchHallOfFame() {
-  if (!db) return { success: false, score: null };
+  if (!db) return { success: false, scores: [] };
   try {
     const q = query(
       collection(db, 'scores'),
       where('submittedAt', '>=', HALL_OF_FAME_START),
       orderBy('altitude', 'desc'),
-      limit(1)
+      limit(20)
     );
     const snapshot = await getDocs(q);
-    if (snapshot.empty) return { success: true, score: null };
-    return { success: true, score: snapshot.docs[0].data() };
+    if (snapshot.empty) return { success: true, scores: [] };
+    const all = snapshot.docs.map(doc => doc.data());
+    const topAltitude = all[0].altitude;
+    const scores = all.filter(s => s.altitude === topAltitude);
+    return { success: true, scores };
   } catch (e) {
     console.warn('Hall of fame fetch failed:', e);
-    return { success: false, score: null };
+    return { success: false, scores: [] };
   }
 }
 

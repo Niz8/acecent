@@ -66,24 +66,27 @@ function renderLeaderboard(container, playerName, playerAltitude, onClose) {
   });
 
   // Fetch hall of fame
-  fetchHallOfFame().then(({ success, score }) => {
+  fetchHallOfFame().then(({ success, scores }) => {
     const hof = container.querySelector('#hall-of-fame');
     if (!success) {
       hof.innerHTML = '';
       return;
     }
 
-    hof.innerHTML = `
-      <div class="hof-title">🏆 All-Time Record</div>
-      ${score
-        ? `<div class="leaderboard-entry hof-entry">
+    const entriesHTML = scores.length === 0
+      ? `<div class="leaderboard-empty">No records yet.</div>`
+      : scores.map(score => `
+          <div class="leaderboard-entry hof-entry">
             <span class="leaderboard-rank">🏆</span>
             <span class="leaderboard-name">${score.playerName}</span>
             <span class="leaderboard-tier">${score.tierName}</span>
             <span class="leaderboard-altitude">${score.altitude.toLocaleString()} ft</span>
-          </div>`
-        : `<div class="leaderboard-empty">No records yet.</div>`
-      }
+          </div>
+        `).join('');
+
+    hof.innerHTML = `
+      <div class="hof-title">🏆 All-Time Record</div>
+      ${entriesHTML}
       <div class="leaderboard-quote"><em>${getDailyQuote()}</em></div>
       <div class="hof-disclaimer">Scores tracked since May 2, 2026</div>
     `;
