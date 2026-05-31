@@ -30,9 +30,15 @@ function initFirebase() {
   }
 }
 
+const DEV_PLAYER_NAME = 'acecent_dev';
+
 // Submit score to Firestore
 // Returns { success, error }
 async function submitScore(playerName, altitude, tierName) {
+  if (playerName === DEV_PLAYER_NAME) {
+    console.log(`[DEV] Score not submitted — dev bypass active (${altitude} ft, ${tierName})`);
+    return { success: true };
+  }
   if (!db) return { success: false, error: 'No database connection' };
   try {
     const dateString = getDailyDateString();
